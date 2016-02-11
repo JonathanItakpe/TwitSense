@@ -1,4 +1,5 @@
 <!DOCTYPE html>
+<!--suppress ALL -->
 <html lang="en">
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <head>
@@ -35,20 +36,23 @@
         $(function(){
                 var dataSet = JSON.parse(JSON.stringify({{ data|safe }}));
 				var div_pos = $('<div>')
-                .attr('class', 'list-group').attr('style', 'background-color:green;')
-                .append($('<a>')
-                .attr('class', 'list-group-item active')
-                .append($('<h4>')
-                .attr('class', 'list-group-item-heading'),
-                $('<p>')
-                .attr('class', 'list-group-item-text')));
-
-                var div_neg = $('<div>').css("background-color", "red")
                 .attr('class', 'list-group')
                 .append($('<a>')
-                .attr('class', 'list-group-item active')
-                .append($('<h4>').attr('class', 'list-group-item-heading'),
-                $('<p>').attr('class', 'list-group-item-text')));
+                .attr('class', 'list-group-item list-group-item-success')
+                .append($('<h4>')
+                .attr('class', 'list-group-item-heading list-group-item-success'),
+                $('<p>')
+                .attr('class', 'list-group-item-text list-group-item-success'),
+                $('<h5>')
+                .attr('class', 'list-group-item-text list-group-item-success')));
+
+                var div_neg = $('<div>')
+                .attr('class', 'list-group')
+                .append($('<a>')
+                .attr('class', 'list-group-item list-group-item-danger')
+                .append($('<h4>').attr('class', 'list-group-item-heading list-group-item-danger'),
+                $('<p>').attr('class', 'list-group-item-text list-group-item-danger'),
+                $('<h5>').attr('class', 'list-group-item-text list-group-item-danger')));
 
                 var tweet = '';
 
@@ -60,7 +64,8 @@
                         tweet = $(div_neg).clone();
                     }
 					$(tweet).find('h4').text(value.tweetText).addClass('blockquote');
-                    $(tweet).find('p').text('Sentiment: ' + value.sentiment  + 'Weight: ' + value.weight).addClass('text-left')
+                    $(tweet).find('p').text('Sentiment: ' + value.sentiment).addClass('text-left').addClass('text-info')
+                    $(tweet).find('h5').text('Weight: ' + value.weight).addClass('text-left').addClass('text-info')
 					$('#tweets').append(tweet);
 				});
             });
