@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<head>
+    <title>Twit-Sense: Making sense of unstructured text...</title>
+
+    <link href="http://getbootstrap.com/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <link href="http://getbootstrap.com/examples/jumbotron-narrow/jumbotron-narrow.css" rel="stylesheet">
+
+    <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+
+     {#<script language="JavaScript" type="text/javascript">
+                        $(function() {
+                            $('#btnSubmit').click(function() {
+                                var query = $('#search').val();
+                                $.ajax({
+                                url: '/getResult',
+                                data: $('form').serialize(),
+                                type: 'POST',
+                                success: function(response) {
+                                    console.log(response);
+                                },
+                                error: function(error) {
+                                    console.log(error);
+                                }
+                            });
+                        });
+                    });
+                    </script>#}
+
+</head>
+
+<body>
+
+    <div class="container">
+        <div class="header">
+            <nav>
+                <ul class="nav nav-pills pull-right">
+                    <li role="presentation" class="active"><a href="#">Home</a>
+                    </li>
+                </ul>
+            </nav>
+            <h3 class="text-muted">Twit-Sense</h3>
+        </div>
+
+        <div class="jumbotron">
+            <h1>Twit Sense</h1>
+            <p class="lead"></p>
+            <div class="center">
+                <form action="/getResult" class="form-vertical" method="post">
+                <div class="input-group col-sm-10 center">
+                    <input type="search" class="form-control" name="search" id="search">
+                    <span class="help-block">Enter the <b>PRODUCT</b> or <b>BRAND</b> you want to get public opinion about.</span>
+                    <button type="submit" class="btn btn-success" id="btnSubmit" >Get Result</button>
+                </div>
+                </form>
+            </div>
+        </div>
+
+        <footer class="footer">
+            <p>&copy;  <a href="http://twitter.com/iMLordJ">Twitter - @iMLordJ</a> 2015</p>
+        </footer>
+
+    </div>
+</body>
+
+</html>

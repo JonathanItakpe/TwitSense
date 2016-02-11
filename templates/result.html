@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<head>
+    <title>Twit-Sense: Making sense of unstructured text...</title>
+
+    <link href="http://getbootstrap.com/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <link href="http://getbootstrap.com/examples/jumbotron-narrow/jumbotron-narrow.css" rel="stylesheet">
+
+    <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+
+    <script type="text/javascript">
+        $(function(){
+    $("tr").each(function(){
+      var col_val = $(this).find("td:eq(1)").text();
+        console.log(col_val)
+      if ($.trim(col_val) == "positive"){
+        $(this).addClass('success');  //the selected class colors the row green//
+      } else {
+        $(this).addClass('danger');
+      }
+    });
+    });
+    </script>
+</head>
+
+<body>
+    <div class="container">
+        <div class="header">
+            <nav>
+                <ul class="nav nav-pills pull-right">
+                    <li role="presentation" class="active"><a href="/">Home</a>
+                    </li>
+                </ul>
+            </nav>
+            <h3 class="text-muted">Twit-Sense</h3>
+        </div>
+
+        <div >
+            <h1>Twit-Sense</h1>
+            <p class="lead"></p>
+            {{ data.to_html(classes="table table-striped table-responsive table-hover") | safe}}
+        </div>
+
+        <footer class="footer">
+            <p>&copy;  <a href="http://twitter.com/iMLordJ">Twitter - @iMLordJ</a> 2015</p>
+        </footer>
+
+    </div>
+</body>
+
+</html>

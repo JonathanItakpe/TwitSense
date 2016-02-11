@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<head>
+    <title>Twit-Sense: Making sense of unstructured text...</title>
+
+    <!-- Latest compiled and minified CSS -->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css" integrity="sha384-1q8mTJOASx8j1Au+a5WDVnPi2lkFfwwEAa8hDDdjZlpLegxhjVME1fgjWPGmkzs7" crossorigin="anonymous">
+
+    <!-- Optional theme -->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap-theme.min.css" integrity="sha384-fLW2N01lMqjakBkx3l/M9EahuwpSfeNvV63J5ezn3uZzapT0u7EYsXMjQV+0En5r" crossorigin="anonymous">
+
+    <!-- Latest compiled and minified JavaScript -->
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js" integrity="sha384-0mSbJDEHialfmuBBQP6A4Qrprq5OVfW37PRR3j5ELqxss1yVqOtnepnHVP9aJ7xS" crossorigin="anonymous"></script>
+
+    <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+
+    <link href="style.css" rel="stylesheet" type="text/css">
+
+    <script type="text/javascript">
+        $(function(){
+    $("div").each(function(){
+      var col_val = $(this).find("p").text();
+        console.log(col_val)
+      if ($.trim(col_val) == "Sentiment: positive"){
+        $(this).addClass('success');  //the selected class colors the row green//
+      } else {
+        $(this).addClass('danger');
+      }
+    });
+    });
+    </script>
+
+    <script type="text/javascript">
+        $(function(){
+                var dataSet = JSON.parse(JSON.stringify({{ data|safe }}));
+				var div_pos = $('<div>')
+                .attr('class', 'list-group').attr('style', 'background-color:green;')
+                .append($('<a>')
+                .attr('class', 'list-group-item active')
+                .append($('<h4>')
+                .attr('class', 'list-group-item-heading'),
+                $('<p>')
+                .attr('class', 'list-group-item-text')));
+
+                var div_neg = $('<div>').css("background-color", "red")
+                .attr('class', 'list-group')
+                .append($('<a>')
+                .attr('class', 'list-group-item active')
+                .append($('<h4>').attr('class', 'list-group-item-heading'),
+                $('<p>').attr('class', 'list-group-item-text')));
+
+                var tweet = '';
+
+
+                $.each(dataSet, function(index, value){
+                    if (value.sentiment == 'positive') {
+                        tweet = $(div_pos).clone();
+                    } else if (value.sentiment == 'negative') {
+                        tweet = $(div_neg).clone();
+                    }
+					$(tweet).find('h4').text(value.tweetText).addClass('blockquote');
+                    $(tweet).find('p').text('Sentiment: ' + value.sentiment  + 'Weight: ' + value.weight).addClass('text-left')
+					$('#tweets').append(tweet);
+				});
+            });
+    </script>
+</head>
+
+<body>
+    <div class="container-fluid">
+        <header>
+            <nav>
+                <ul class="nav nav-pills pull-right">
+                    <li role="presentation" class="active"><a href="/">Home</a>
+                    </li>
+                </ul>
+            </nav>
+            <h3 class="text-muted">Twit-Sense</h3>
+            </header>
+    <br>
+    <div class="row">
+        <p><strong>Top 10 Tweets</strong></p><br>
+        <div id="tweets" class="col-sm-6" style="overflow-y:scroll; height:400px;">
+
+        </div>
+
+        <div class="col-sm-6">
+            <p><strong>Name</strong></p><br>
+
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-sm-6">
+            <p><strong>Name</strong></p><br>
+
+        </div>
+
+        <div class="col-sm-6">
+            <p><strong>Name</strong></p><br>
+
+        </div>
+    </div>
+
+        <footer class="footer">
+            <p>&copy;  <a href="http://twitter.com/iMLordJ">Twitter - @iMLordJ</a> 2015</p>
+        </footer>
+
+    </div>
+</body>
+
+</html>
