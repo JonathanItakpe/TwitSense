@@ -13,15 +13,16 @@ auth.set_access_token(config_my.get('access_token'), config_my.get('access_token
 api = tweepy.API(auth)
 
 
-def search_twitter(keyword, no_results):
+def search_twitter(keyword):
     tweets = []
     for tweet in tweepy.Cursor(api.search,
                                q=keyword,
                                # count=page_count,
+                               # rpp=100,
                                result_type="recent",
                                include_entities=True,
-                               lang="en").items(no_results):
-        print tweet.text.replace('\n', ' ')
+                               lang="en").items():
+        # print tweet.text.replace('\n', ' ')
         tweets.append(tweet)
 
     # with open(tweet_loc, 'w') as f:
