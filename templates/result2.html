@@ -5,6 +5,8 @@
 <head>
     <title>Twit-Sense: Making sense of unstructured text...</title>
 
+    <script src="https://code.jquery.com/jquery-2.2.0.min.js"></script>
+
     <!-- Latest compiled and minified CSS -->
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css" integrity="sha384-1q8mTJOASx8j1Au+a5WDVnPi2lkFfwwEAa8hDDdjZlpLegxhjVME1fgjWPGmkzs7" crossorigin="anonymous">
 
@@ -14,9 +16,19 @@
     <!-- Latest compiled and minified JavaScript -->
     <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js" integrity="sha384-0mSbJDEHialfmuBBQP6A4Qrprq5OVfW37PRR3j5ELqxss1yVqOtnepnHVP9aJ7xS" crossorigin="anonymous"></script>
 
-    <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
-
     <link href="style.css" rel="stylesheet" type="text/css">
+
+    <link rel="stylesheet" href="https://cdn.pydata.org/bokeh/release/bokeh-0.11.1.min.css" type="text/css" />
+
+    <script type="text/javascript" src="https://cdn.pydata.org/bokeh/release/bokeh-0.11.1.min.js"></script>
+
+    <script type="text/javascript">
+    Bokeh.set_log_level("info");
+    </script>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/3.5.15/d3.js"></script>
+
+    <script src="../static/d3.layout.cloud.js"></script>
 
     <script type="text/javascript">
         $(function(){
@@ -73,6 +85,145 @@
 				});
             });
     </script>
+
+    {#<script>
+(function() {
+    var fill = d3.scale.category20();
+    //what range of font sizes do we want, we will scale the word counts
+    var fontSize = d3.scale.log().range([10, 90]);
+
+    //create my cloud object
+    var mycloud = d3.layout.cloud().size([600, 600])
+          .words([])
+          .padding(2)
+          .rotate(function() { return ~~(Math.random() * 2) * 90; })
+          // .rotate(function() { return 0; })
+          .font("Impact")
+          .fontSize(function(d) { return fontSize(d.size); })
+          .on("end", draw)
+
+    //render the cloud with animations
+     function draw(words) {
+        //fade existing tag cloud out
+        //d3.select("body").selectAll("svg").selectAll("g")
+        //    .transition()
+        //        .duration(1000)
+        //        .style("opacity", 1e-6)
+        //        .remove();
+
+        //render new tag cloud
+        d3.select("#word_cloud").selectAll("svg")
+            .append("g")
+                .attr("transform", "translate(300,300)")
+                .selectAll("text")
+                .data(words)
+            .enter().append("text")
+            .style("font-size", function(d) { return ((d.size)* 1) + "px"; })
+            .style("font-family", "Impact")
+            .style("fill", function(d, i) { return fill(i); })
+            .style("opacity", 1e-6)
+            .attr("text-anchor", "middle")
+            .attr("transform", function(d) { return "translate(" + [d.x, d.y] + ")rotate(" + d.rotate + ")"; })
+            .transition()
+            //.duration(1000)
+            .style("opacity", 1)
+            .text(function(d) { return d.text; });
+      }
+
+    //ajax call
+    function get_words() {
+        //make ajax call
+        d3.json({{ freq | safe }}, function(error, json) {
+          if (error) return console.warn(error);
+          var words_array = [];
+          for (key in json){
+            words_array.push({text: key, size: json[key]})
+          }
+          //render cloud
+          mycloud.stop().words(words_array).start();
+        });
+    };
+
+    //create SVG container
+    d3.select("#word_cloud").append("svg")
+        .attr("width", 600)
+        .attr("height", 600);
+
+    //render first cloud
+    get_words();
+
+    //start streaming
+    //var interval = setInterval(function(){get_words()}, 4000);
+    })();
+</script>#}
+
+    <script>
+        var words = {{ freq|safe }};
+        console.log(words)
+        function drawWordCloud(rescale)
+        {
+            width = 600;
+            height = 600;
+            fontFamily = "Open Sans";
+            var fill = d3.scale.category20();
+            d3.layout.cloud().size([width, height])
+                .words(Object.keys(words).map(function(d)
+                {
+                    return {
+                        text: d,
+                        size: 7 + words[d] * rescale
+                    };
+                }))
+                .padding(1)
+                .rotate(function()
+                {
+                    // Uncomment and change this line if you want the words to
+                    // be rotated. Returning 0 makes all the words horizontal.
+                    // return ~~(Math.random() * 2) * 90;
+                    return 0;
+                })
+                .font(fontFamily)
+                .fontSize(function(d)
+                {
+                    return d.size;
+                })
+                .on("end", draw)
+                .start();
+
+            function draw(words)
+            {
+                d3.select("#word-cloud").append("svg")
+                    .attr("width", width)
+                    .attr("height", height)
+                    .append("g")
+                    .attr("transform", "translate(" + width / 2 + ", " + height / 2 + ")")
+                    .selectAll("text")
+                    .data(words)
+                    .enter().append("text")
+                    .style("font-size", function(d)
+                    {
+                        return d.size + "px";
+                    })
+                    .style("font-family", fontFamily)
+                    .style("fill", function(d, i)
+                    {
+                        return fill(i);
+                    })
+                    .attr("text-anchor", "middle")
+                    .attr("transform", function(d)
+                    {
+                        return "translate(" + [d.x, d.y] + ")rotate(" + d.rotate + ")";
+                    })
+                    .text(function(d)
+                    {
+                        return d.text;
+                    });
+            }
+        }
+
+        drawWordCloud(250);
+    </script>
+
 </head>
 
 <body>
@@ -86,25 +237,24 @@
             </nav>
             <h1 class="text-muted">Twit-Sense</h1>
             </div>
-    <br><br>
-        <div class="jumbotron">
-            <h4>Results for query {{ query }}</h4>
-        </div>
+        <br>
     <div class="row">
-        <p><strong>Top 10 Tweets about </strong><strong class="text-uppercase text-info"> {{ query }} </strong></p><br>
         <div id="tweets" class="col-sm-6" style="overflow-y:scroll; height:400px;">
+        <p><strong>Top 10 Tweets about </strong><strong class="text-uppercase text-info"> {{ query }} </strong></p><br>
 
         </div>
 
-        <div class="col-sm-6">
-            <p><strong>Name</strong></p><br>
-            {{ chart }}
+        <p><strong>Sentiment Charts: </strong><strong class="text-uppercase text-info"> {{ query }} </strong></p><br>
+        <div id="bar_chart" class="col-sm-6">
+            {{ div_bar | safe }}
+            {{ script_bar | safe }}
         </div>
     </div>
 
     <div class="row">
-        <div class="col-sm-6">
             <p><strong>Name</strong></p><br>
+        <div id="word-cloud" class="col-sm-6">
+
 
         </div>
 

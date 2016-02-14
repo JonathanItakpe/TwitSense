@@ -19,9 +19,9 @@ def search_twitter(keyword):
                                q=keyword,
                                # count=page_count,
                                # rpp=100,
-                               result_type="recent",
+                               result_type="mixed",
                                include_entities=True,
-                               lang="en").items():
+                               lang="en").items(300):
         # print tweet.text.replace('\n', ' ')
         tweets.append(tweet)
 

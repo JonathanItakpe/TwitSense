@@ -7,6 +7,9 @@ import re
 from weights import get_weights
 from twitter_search import search_twitter
 from datetime import datetime
+from train_classifier import getStopWordList
+import nltk
+from nltk import FreqDist
 
 pd.set_option('display.max_colwidth', -1)
 
@@ -65,11 +68,11 @@ def gettimediff(time_):
     if tdelta_secs <= 60:
         return str(int(tdelta_secs)) + ' Second(s)'
     elif 60 < tdelta_secs <= 3600:
-        return str(int(tdelta_secs/60)) + ' Minute(s)'
+        return str(int(tdelta_secs / 60)) + ' Minute(s)'
     elif 3600 < tdelta_secs <= 86400:
-        return str(int(tdelta_secs/3600)) + ' Hour(s)'
+        return str(int(tdelta_secs / 3600)) + ' Hour(s)'
     else:
-        return str(int(tdelta_secs/86400)) + ' Day(s)'
+        return str(int(tdelta_secs / 86400)) + ' Day(s)'
 
 
 def toDataFrame(tweets, clf):
@@ -110,16 +113,16 @@ def get_data(keyword):
                                   x['verified'], x['followerCount']), axis=1)
 
     DataSet.drop_duplicates(subset='tweetText', keep='first', inplace=True)
-    #DataSet['t'] = [element for element in DataSet['tweetText'].values if not element.startswith('RT')]
+
+    # DataSet['t'] = [element for element in DataSet['tweetText'].values if not element.startswith('RT')]
 
     # DataSet.drop_duplicates(subset='tweetAcct', keep=False, inplace=True)
     # DataSet.sort_values('tweetRetweetCt', ascending=False)
 
-    print str(DataSet)
     print '\n ' + str(len(DataSet))
     print 'Total time taken to complete...' + str(datetime.now() - startTime)
     return DataSet
 
 
 if __name__ == '__main__':
-    get_data('iPhone')
+    get_data('Tesla Model S')
