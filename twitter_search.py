@@ -19,7 +19,7 @@ def search_twitter(keyword):
                                q=keyword,
                                # count=page_count,
                                # rpp=100,
-                               result_type="mixed",
+                               result_type="recent",
                                include_entities=True,
                                lang="en").items(300):
         # print tweet.text.replace('\n', ' ')

@@ -10,6 +10,11 @@
 
     <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
 
+    <link href="../static/styles.css" rel="stylesheet">
+
+    <!-- Latest compiled and minified JavaScript -->
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js" integrity="sha384-0mSbJDEHialfmuBBQP6A4Qrprq5OVfW37PRR3j5ELqxss1yVqOtnepnHVP9aJ7xS" crossorigin="anonymous"></script>
+
      {#<script language="JavaScript" type="text/javascript">
                         $(function() {
                             $('#btnSubmit').click(function() {
@@ -52,7 +57,15 @@
                 <div class="input-group col-sm-10 center">
                     <input type="search" class="form-control" name="search" id="search">
                     <span class="help-block">Enter the <b>PRODUCT</b>, <b>BRAND</b> or <b>PERSON</b> you want to get public opinion about.</span>
+
+                    <!-- Trigger the modal with a Link -->
+                    <a href="#moreOptions" data-toggle="modal" data-target="#moreOptions">Click here for advanced Settings</a><br>
                     <button type="submit" class="btn btn-success" id="btnSubmit" >Get Result</button>
+
+                    <!-- Modal -->
+                    <div id="moreOptions" class="modal fade" role="dialog">
+
+                    </div>
                 </div>
                 </form>
             </div>
