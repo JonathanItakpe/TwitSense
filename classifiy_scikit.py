@@ -7,11 +7,18 @@ import re
 from weights import get_weights
 from twitter_search import search_twitter
 from datetime import datetime
-from train_classifier import getStopWordList
-import nltk
-from nltk import FreqDist
+from nltk.corpus import stopwords
+import string
 
 pd.set_option('display.max_colwidth', -1)
+
+
+def getStopWordList():
+    # read the stopwords file and build a list
+    stop = []
+    punctuation = list(string.punctuation)
+    stop = stopwords.words('english') + punctuation + ['AT_USER', 'URL', 'url', 'retweet', 'rt']
+    return stop
 
 
 def processTweet(tweet):
@@ -106,6 +113,7 @@ def get_data(keyword):
     for result in results:
         if regexp_url.search(result.text) is not None:
             results.remove(result)
+    # END OF REMOVAL
 
     DataSet = toDataFrame(results, clf)
     DataSet['weight'] = DataSet.apply(

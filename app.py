@@ -6,7 +6,7 @@ import bokeh.plotting as plt
 from bokeh.embed import components
 from bokeh.charts import Bar, output_file, show, Histogram
 import pandas as pd
-from train_classifier import getStopWordList
+from classifiy_scikit import getStopWordList
 import nltk
 from nltk import FreqDist
 
@@ -21,7 +21,7 @@ def hello_world():
 @app.route('/getResult', methods=['POST'])
 def getresult():
     try:
-        # RECIEVE DATA FROM INDEX WEB PAGE
+        # RECEIVE DATA FROM INDEX WEB PAGE
         query = request.form['search']
 
         # GET TWEETS DATA FRAME BASED ON SEARCH QUERY
@@ -71,6 +71,23 @@ def getresult():
     except Exception as e:
         return render_template('error.html', error=e)
 
+
+@app.route('/getAdvOptions', methods=['POST'])
+def getmoreoptions():
+    checked_url = False
+    try:
+        no_tweets = request.form['noTweets']
+        name_clf = request.form['selClf']
+
+        if 'url' in request.form:
+            checked_url = True
+
+        print no_tweets
+        print name_clf
+        print checked_url
+    except Exception as e:
+        print e
+        return render_template('error.html', error=e)
 
 if __name__ == '__main__':
     app.run(debug=True)
