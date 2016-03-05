@@ -8,20 +8,19 @@ parse_cfg = parse_config.parse_config()
 
 config_my = parse_cfg
 
-auth = tweepy.OAuthHandler(config_my.get('consumer_key'), config_my.get('consumer_secret'))
-auth.set_access_token(config_my.get('access_token'), config_my.get('access_token_secret'))
-api = tweepy.API(auth)
 
-
-def search_twitter(keyword):
+def search_twitter(keyword, no_tweets, token, token_secret):
+    auth = tweepy.OAuthHandler(config_my.get('consumer_key'), config_my.get('consumer_secret'))
+    auth.set_access_token(token, token_secret)
+    api = tweepy.API(auth)
     tweets = []
     for tweet in tweepy.Cursor(api.search,
                                q=keyword,
-                               # count=page_count,
+                               # count=no_tweets,
                                # rpp=100,
                                result_type="recent",
                                include_entities=True,
-                               lang="en").items(300):
+                               lang="en").items(no_tweets):
         # print tweet.text.replace('\n', ' ')
         tweets.append(tweet)
 

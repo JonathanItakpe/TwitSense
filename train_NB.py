@@ -97,7 +97,7 @@ if __name__ == '__main__':
     vec_clf.fit(tweet, sentiment)
 
     print 'Dumping to file...'
-    _ = joblib.dump(vec_clf, 'pickle/NB_Class_Vec.pkl', compress=9)
+    _ = joblib.dump(vec_clf, 'pickle/NB.pkl', compress=9)
 
     # tweet_vec = vectorize(tweet, sentiment)
     # learn_model(tweet_vec, sentiment)

@@ -96,17 +96,7 @@ def toDataFrame(tweets, clf):
     return TweetDataSet
 
 
-def get_data(keyword):
-    startTime = datetime.now()
-    # Pass the tweets list to the above function to create a DataFrame
-    print 'Loading Naive Bayes Classifier...'
-    clf = joblib.load('pickle/NB_Class_Vec.pkl')
-    print '... 100% Loaded Completely!!! '
-    print 'Retrieving tweets...'
-    results = search_twitter(keyword)
-    print type(results)
-    print len(results)
-
+def removeTweetsWithUrl(results):
     # REMOVE TWEETS THAT CONTAINS URL:
     regexp_url = re.compile('((www\.[^\s]+)|(https?://[^\s]+))')
 
@@ -114,6 +104,23 @@ def get_data(keyword):
         if regexp_url.search(result.text) is not None:
             results.remove(result)
     # END OF REMOVAL
+    return results
+
+
+def get_data(keyword, token, token_secret, classifier='Naive Bayes', no_tweets=300, remove_urls=True):
+    startTime = datetime.now()
+    # Pass the tweets list to the above function to create a DataFrame
+    print 'Loading ' + classifier + ' Classifier...'
+    clf = joblib.load('pickle/' + classifier + '.pkl')
+    print '... 100% Loaded Completely!!!'
+    print 'Retrieving tweets...'
+    print 'User given No of Tweets: ' + str(no_tweets)
+    print 'Remove url? ' + str(remove_urls)
+    results = search_twitter(keyword, no_tweets, token, token_secret)
+    print len(results)
+
+    if remove_urls:
+        removeTweetsWithUrl(results)
 
     DataSet = toDataFrame(results, clf)
     DataSet['weight'] = DataSet.apply(
@@ -133,4 +140,4 @@ def get_data(keyword):
 
 
 if __name__ == '__main__':
-    get_data('Tesla Model S')
+    get_data('Kendrick Lamar')

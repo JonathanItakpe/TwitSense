@@ -18,22 +18,25 @@
 </head>
 
 <body>
+
     <div class="container">
         <div class="header">
             <nav>
                 <ul class="nav nav-pills pull-right">
-                    <li role="presentation" class="active"><a href="#">Home</a>
+                    <li role="presentation" class="active"><a href="/">Home</a>
+                    </li>
+                    <li role="presentation" class="active"><a href="/logout">Logout</a>
                     </li>
                 </ul>
             </nav>
-            <h3 class="text-muted">Twit-Sense</h3>
+            <h3 class="text-muted">Twit Sense</h3>
         </div>
 
         <div class="jumbotron">
             <h1>Twit-Sense</h1>
             <p class="lead"></p>
             <div class="center">
-                <form action="/getResult" class="form-vertical" method="post">
+                <form action="/getResult" class="form-vertical" method="post" name="InitialForm">
                     <input type="search" class="form-control" name="search" id="search">
                     <span class="help-block">Enter the <b>PRODUCT</b>, <b>BRAND</b> or <b>PERSON</b> you want to get public opinion about.</span>
 
@@ -56,10 +59,15 @@
 
                                 <!-- MODAL BODY -->
                                 <div class="modal-body">
-                                    <form action="/getAdvOptions" method="post">
+                                    <form action="/getAdvOptions" method="post" name="formTwo">
+                                        <div class="form-group">
+                                            <label for="advQuery">Enter Search Query: </label>
+                                            <input class="form-control" id="advQuery" name="advQuery">
+                                        </div>
                                         <div class="form-group">
                                             <label for="noTweets">Enter Number of Tweets: </label>
-                                            <input type="number" class="form-control" id="noTweets" name="noTweets">
+                                            <input type="number" max="1500" class="form-control" id="noTweets" name="noTweets">
+                                            <span class="help-block">Maximum amount of tweets is 1500</span>
                                         </div>
                                         <div class="form-group">
                                             <label for="selClf">Select Classifier:</label>
@@ -80,7 +88,6 @@
                         </div>
                     </div>
                 </div>
-            </div>
         </div>
 
         <footer class="footer">

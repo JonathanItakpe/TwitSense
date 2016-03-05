@@ -9,7 +9,8 @@ import string
 import pickle
 from nltk.corpus import stopwords
 from sklearn.externals import joblib
-from classifiy_scikit import processTweet
+from classifier import processTweet
+
 
 def create_tfidf(f):
     sentiment = []
