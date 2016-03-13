@@ -17,7 +17,7 @@ Jinja2==2.8
 lxml==3.4.4
 MarkupSafe==0.23
 nltk==3.1
-numpy==1.10.4
+numpy==1.9.2
 oauth2==1.9.0.post1
 oauthlib==1.0.3
 pandas==0.17.1
@@ -28,8 +28,8 @@ pytz==2015.7
 PyYAML==3.11
 requests==2.9.1
 requests-oauthlib==0.6.0
-scipy==0.17.0
-scikit-learn==0.17
+scipy==0.15.1
+scikit-learn==0.15.2
 singledispatch==3.4.0.3
 six==1.10.0
 SQLAlchemy==1.0.12
