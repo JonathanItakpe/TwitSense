@@ -2,16 +2,20 @@
 <html lang="en">
 
 <head>
-    <title>Authorize Twit-Sense Application</title>
+    <title>Twitsense - Extend Training Set</title>
 
     <link href="http://getbootstrap.com/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="shortcut icon" href="{{ url_for('static', filename='favicon.ico') }}">
+
     <link href="http://getbootstrap.com/examples/jumbotron-narrow/jumbotron-narrow.css" rel="stylesheet">
 
     <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
 
+    <link href="../static/styles.css" rel="stylesheet">
+
     <!-- Latest compiled and minified JavaScript -->
     <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js" integrity="sha384-0mSbJDEHialfmuBBQP6A4Qrprq5OVfW37PRR3j5ELqxss1yVqOtnepnHVP9aJ7xS" crossorigin="anonymous"></script>
+
+
 </head>
 
 <body>
@@ -24,17 +28,17 @@
                     </li>
                 </ul>
             </nav>
-            <h3 class="text-muted">Twit Sense</h3>
+            <h3 class="text-muted">Twitsense</h3>
         </div>
 
         <div class="jumbotron">
-            <h2>Welcome to Twit-Sense</h2>
-            <blockquote>Due to new twitter policies, every user accessing the Twitter API is required to
-            Login to twitter and grant this application access to their account in order to pull tweets.
-            Thank You, Kindly login below</blockquote>
-            <a href="/loginTwitter"><img src="../static/sign-in.png" alt="Sign In"></a>
-        </div>
 
+        </div>
+        <div>
+            <h1>Twit-Sense</h1>
+            <p class="lead"></p>
+            {{ tweets.to_html(classes="table table-striped table-responsive table-hover") | safe}}
+        </div>
 
         <footer class="footer">
             <p>&copy;  <a href="http://twitter.com/iMLordJ">Twitter - @iMLordJ</a> 2015</p>

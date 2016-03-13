@@ -4,11 +4,18 @@
 <head>
     <title>Unauthorized Access:: Twitsense</title>
 
-    <link rel="shortcut icon" href="{{ url_for('static', filename='favicon.ico') }}">
+
     <link href="http://getbootstrap.com/dist/css/bootstrap.min.css" rel="stylesheet">
 
     <link href="http://getbootstrap.com/examples/jumbotron-narrow/jumbotron-narrow.css" rel="stylesheet">
 
+    <script src="http://code.jquery.com/jquery-latest.js"></script>
+
+    <style>
+  #data {
+    text-align: center;
+  }
+  </style>
 
 </head>
 
@@ -26,7 +33,12 @@
         </div>
 
         <div class="jumbotron">
-            <h3>{{error}}</h3>
+            <div id="data">nothing received yet</div>
+                {% for i in data %}
+            <script>
+                $("#data").text("{{ i }}")
+            </script>
+                {% endfor %}
         </div>
 
         <footer class="footer">

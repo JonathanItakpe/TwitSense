@@ -17,13 +17,12 @@ def search_twitter(keyword, no_tweets, token, token_secret):
     for tweet in tweepy.Cursor(api.search,
                                q=keyword,
                                # count=no_tweets,
-                               # rpp=100,
                                result_type="recent",
                                include_entities=True,
                                lang="en").items(no_tweets):
         # print tweet.text.replace('\n', ' ')
         tweets.append(tweet)
-
+        print(tweet.text)
     # with open(tweet_loc, 'w') as f:
     #     for tweet in tweets:
     #         json.dump(tweet, f)

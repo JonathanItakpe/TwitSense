@@ -1,19 +1,19 @@
 from flask import Flask
-from flask import render_template, redirect, request, json, url_for, session, g, flash
+from flask import render_template, redirect, request, url_for, session, g, flash, stream_with_context, Response
+from flask.ext.session import Session
 from classifier import get_data
 from flask_oauth import OAuth
-from sqlalchemy import create_engine, Column, Integer, String
-from sqlalchemy.orm import scoped_session, sessionmaker
-from sqlalchemy.ext.declarative import declarative_base
 from bokeh.embed import components
 from bokeh.charts import Bar
 import pandas as pd
-from classifier import getStopWordList
+from twitter_search import search_twitter
+import classifier as act
 from parse_config import parse_config
-import os
+import os, time
 
 # configuration
 SECRET_KEY = os.urandom(32)
+# SECRET_KEY = 'damn-this-shit-sucks-bad'
 DEBUG = True
 
 # setup flask
@@ -52,6 +52,7 @@ def get_twitter_token():
 
 @app.route('/')
 def index():
+    session.pop('screen_name', None)
     try:
         if session['screen_name']:
             return render_template('index.html')
@@ -103,48 +104,67 @@ def oauth_authorized(resp):
 
 @app.route('/getResult', methods=['POST'])
 def getresult():
-    try:
-        # RECEIVE DATA FROM INDEX WEB PAGE
-        query = request.form['search']
-
-        # GET USER ACCESS KEYS
-        token = session['twitter_token'][0]
-        token_secret = session['twitter_token'][1]
-
-        # GET TWEETS DATA FRAME BASED ON SEARCH QUERY
-        data = get_data(query, token=token, token_secret=token_secret)
-
-        top10, script_bar, div_bar, freq = performComputation(data)
-
-        return render_template('result2.html', data=top10.to_json(orient='records'), query=query, script_bar=script_bar,
-                               div_bar=div_bar, freq=freq.to_json())
-    except Exception as e:
-        return render_template('error.html', error=e)
-
-
-@app.route('/getAdvOptions', methods=['POST'])
-def getmoreoptions():
     checked_url = False
     try:
-        no_tweets = request.form['noTweets']
-        name_clf = request.form['selClf']
-        adv_query = request.form['advQuery']
+
+        # RECEIVE DATA FROM INDEX WEB PAGE
+        if 'noTweets' in request.form:
+            no_tweets = request.form['noTweets']
+        else:
+            no_tweets = 300
+
+        if 'selClf' in request.form:
+            name_clf = request.form['selClf']
+        else:
+            name_clf = 'Naive Bayes'
+
+        if 'advQuery' in request.form:
+            query = request.form['advQuery']
+        else:
+            query = request.form['search']
+
         if 'url' in request.form:
             checked_url = True
 
+        # VERIFY RESULT
+        print query
+        print str(no_tweets)
+        print name_clf
+        print str(checked_url)
         # GET USER ACCESS KEYS
         token = session['twitter_token'][0]
         token_secret = session['twitter_token'][1]
 
         # GET TWEETS DATA FRAME BASED ON SEARCH QUERY
-        data = get_data(adv_query, token=token, token_secret=token_secret, classifier=name_clf, no_tweets=no_tweets,
-                        remove_urls=checked_url)
+        # data = get_data(query, token=token, token_secret=token_secret)
 
-        top10, script_bar, div_bar, freq = performComputation(data)
+        print 'Loading ' + name_clf + ' classifier...'
+        clf = act.load_classifier(classifier=name_clf)
+        print 'Classifier completely loaded'
 
-        return render_template('result2.html', data=top10.to_json(orient='records'), query=adv_query,
-                               script_bar=script_bar,
-                               div_bar=div_bar, freq=freq.to_json())
+        print 'Connecting to Twitter...'
+        print 'Getting ' + str(no_tweets) + ' tweets'
+        twitter_result = search_twitter(query, no_tweets=no_tweets, token=token, token_secret=token_secret)
+        print str(no_tweets) + 'Tweets Retrieved Successfully!'
+
+        if checked_url==True:
+            print 'Removing Tweets containing URL...'
+            twitter_result = act.removeTweetsWithUrl(twitter_result)
+            print 'Removed tweets containing URL'
+
+        print 'Trying to create a Pandas DataFrame...'
+        print 'Classifying Tweets...'
+        data = act.toDataFrame(twitter_result, clf)
+        print 'Tweets classified Correctly!'
+
+        print 'Finishing up the DataSet'
+        data = act.post_dataset(data)
+        print 'DONE with dataset'
+
+        top10, script_bar, div_bar, all_data = performComputation(data)
+
+        return render_template('result2.html', data=top10.to_json(orient='records'), query=query, script_bar=script_bar,
+                               div_bar=div_bar, full_data=all_data)
     except Exception as e:
         print e
         return render_template('error.html', error=e)
@@ -163,7 +183,7 @@ def performComputation(data):
         # show(p)
         script_bar, div_bar = components(p)
         # END OF BAR CHART
-
+        '''
         # WORDCLOUD
         # Get Stop Words
         stop = getStopWordList()
@@ -189,15 +209,15 @@ def performComputation(data):
 
         print freq.keys()[:20]
         # END OF WORDCLOUD
-
+        '''
         # SELECT TOP 10 TWEETS
         data_tweets = data.head(10)
 
-        return data_tweets, script_bar, div_bar, freq
+        return data_tweets, script_bar, div_bar, data
     except Exception as e:
         print e
         return render_template('error.html', error=e)
 
 
-# if __name__ == '__main__':
-app.run(debug=True)
+if __name__ == '__main__':
+    app.run(debug=True)

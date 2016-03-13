@@ -107,32 +107,38 @@ def removeTweetsWithUrl(results):
     return results
 
 
-def get_data(keyword, token, token_secret, classifier='Naive Bayes', no_tweets=300, remove_urls=True):
-    startTime = datetime.now()
-    # Pass the tweets list to the above function to create a DataFrame
+def load_classifier(classifier='Naive Bayes'):
     print 'Loading ' + classifier + ' Classifier...'
     clf = joblib.load('pickle/' + classifier + '.pkl')
-    print '... 100% Loaded Completely!!!'
-    print 'Retrieving tweets...'
-    print 'User given No of Tweets: ' + str(no_tweets)
-    print 'Remove url? ' + str(remove_urls)
-    results = search_twitter(keyword, no_tweets, token, token_secret)
-    print len(results)
+    return clf
 
-    if remove_urls:
-        removeTweetsWithUrl(results)
 
-    DataSet = toDataFrame(results, clf)
+def post_dataset(DataSet):
     DataSet['weight'] = DataSet.apply(
             lambda x: get_weights(x['tweetRetweetCt'], x['tweetFavoriteCt'], x['sentiment'],
                                   x['verified'], x['followerCount']), axis=1)
 
     DataSet.drop_duplicates(subset='tweetText', keep='first', inplace=True)
+    DataSet.sort_values('tweetRetweetCt', ascending=False)
+    return DataSet
 
-    # DataSet['t'] = [element for element in DataSet['tweetText'].values if not element.startswith('RT')]
 
-    # DataSet.drop_duplicates(subset='tweetAcct', keep=False, inplace=True)
-    # DataSet.sort_values('tweetRetweetCt', ascending=False)
+def get_data(keyword, token, token_secret, classifier='Naive Bayes', no_tweets=300, remove_urls=True):
+    startTime = datetime.now()
+    clf = load_classifier()
+
+    print 'Retrieving tweets...'
+    results = search_twitter(keyword, no_tweets, token, token_secret)
+    print 'Retrieved ' + str(len(results)) + ' Tweets'
+
+    if remove_urls == True:
+        print 'Removing Tweets containing URL...'
+        removeTweetsWithUrl(results)
+
+    print 'Creating pandas Dataframe and classifying tweets...'
+    DataSet = toDataFrame(results, clf)
+
+    DataSet = post_dataset(DataSet)
 
     print '\n ' + str(len(DataSet))
     print 'Total time taken to complete...' + str(datetime.now() - startTime)

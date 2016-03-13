@@ -12,12 +12,14 @@
 
     <link href="../static/styles.css" rel="stylesheet">
 
+    <link rel="shortcut icon" href="{{ url_for('static', filename='favicon.ico') }}">
+
     <!-- Latest compiled and minified JavaScript -->
     <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js" integrity="sha384-0mSbJDEHialfmuBBQP6A4Qrprq5OVfW37PRR3j5ELqxss1yVqOtnepnHVP9aJ7xS" crossorigin="anonymous"></script>
 
 </head>
 
-<body>
+<body >
 
     <div class="container">
         <div class="header">
@@ -59,7 +61,7 @@
 
                                 <!-- MODAL BODY -->
                                 <div class="modal-body">
-                                    <form action="/getAdvOptions" method="post" name="formTwo">
+                                    <form action="/getResult" method="post" name="formTwo">
                                         <div class="form-group">
                                             <label for="advQuery">Enter Search Query: </label>
                                             <input class="form-control" id="advQuery" name="advQuery">
