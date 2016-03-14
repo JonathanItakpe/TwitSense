@@ -7,7 +7,7 @@ import pandas as pd
 from twitter_search import search_twitter
 import classifier as act
 from parse_config import parse_config
-import os
+import os,time
 
 # configuration
 # SQLAlchemy database configuration. Here we are using postgresql
