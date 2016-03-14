@@ -1,7 +1,5 @@
 from flask import Flask
-from flask import render_template, redirect, request, url_for, session, g, flash, stream_with_context, Response
-from flask.ext.session import Session
-from classifier import get_data
+from flask import render_template, redirect, request, url_for, session, g, flash
 from flask_oauth import OAuth
 from bokeh.embed import components
 from bokeh.charts import Bar
@@ -9,9 +7,12 @@ import pandas as pd
 from twitter_search import search_twitter
 import classifier as act
 from parse_config import parse_config
-import os, time
+import os,time
 
 # configuration
+# SQLAlchemy database configuration. Here we are using postgresql
+# database
+
 SECRET_KEY = os.urandom(32)
 # SECRET_KEY = 'damn-this-shit-sucks-bad'
 DEBUG = True

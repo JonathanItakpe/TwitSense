@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
-  <component name="DataSourceManagerImpl" format="xml" hash="135255131">
+  <component name="DataSourceManagerImpl" format="xml" hash="2194954905">
     <data-source source="LOCAL" name="MySQL - twitsense@localhost" uuid="af2639f5-5166-4203-8397-eaa9f307476c">
       <driver-ref>mysql</driver-ref>
       <synchronize>true</synchronize>
@@ -13,6 +13,12 @@
         <property name="characterSetResults" value="utf8" />
         <property name="yearIsDateType" value="false" />
       </driver-properties>
+    </data-source>
+    <data-source source="LOCAL" name="PostgreSQL - twitsense@localhost" uuid="da7af617-f597-482a-960c-1b0bb5efcdb6">
+      <driver-ref>postgresql</driver-ref>
+      <synchronize>true</synchronize>
+      <jdbc-driver>org.postgresql.Driver</jdbc-driver>
+      <jdbc-url>jdbc:postgresql://localhost:5432/twitsense</jdbc-url>
     </data-source>
   </component>
 </project>
