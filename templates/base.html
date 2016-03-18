@@ -1,19 +1,56 @@
 <!DOCTYPE html>
-<html>
-  <head>
-  <!-- Latest compiled and minified CSS -->
-<link rel="stylesheet" href="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css">
+<html lang="en">
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<head>
+    <title>Twit-Sense: Making sense of unstructured text...</title>
+    <link href="{{ url_for('static', filename='css/bootstrap.min.css') }}" rel="stylesheet">
 
-<!-- jQuery library -->
-<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.0/jquery.min.js"></script>
+    <script src="{{ url_for('static', filename='jquery-2.2.1.min.js') }}"></script>
 
-<!-- Latest compiled JavaScript -->
-<script src="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js"></script>
-    <title>Welcome to TwitSense</title>
-  </head>
-  <body>
-    <div>TwitSense: <a href="/index">Home</a></div>
-    <hr>
-    {% block content %}{% endblock %}
-  </body>
+    <link rel="shortcut icon" href="{{ url_for('static', filename='favicon.ico') }}">
+
+    <!-- Latest compiled and minified JavaScript -->
+    <script src="{{ url_for('static', filename='js/bootstrap.min.js') }}" ></script>
+</head>
+
+<header>
+    <div class = "container" style="width: 60%">
+            <div class="navbar-header navbar-left">
+                <a class="navbar-brand" href="/">
+                    <img style="max-width:40px; max-height:40px; margin-top: -7px;" src="{{ url_for('static', filename='main_logo.png') }}" >
+                </a>
+            </div>
+            <a href="/"><button type="button" class="btn btn-primary" aria-label="Left Align" style="margin-top: 10px; margin-bottom: 5px; height: 44px; margin-right: 15px">
+                <span class="glyphicon glyphicon-bitcoin" aria-hidden="true"></span> Twit-Sense
+            </button></a>
+
+            <ul class="nav navbar-nav navbar-right">
+                <div style="margin-right: 10px; margin-left: 15px; margin-top: 5px; margin-bottom: 5px;"  class="container-fluid">
+                    <h4><a href="/help"> <span class="glyphicon glyphicon-heart"></span> Help   </a>
+                        <a href="/logout"><span class="glyphicon glyphicon-log-out"></span> Logout</a></h4>
+                </div>
+            </ul>
+    </div>
+</header>
+
+<body>
+<div class="container" style="min-height:100%; width:50%">
+    {% with messages = get_flashed_messages() %}
+        {% if messages %}
+            {% for message in messages %}
+                <div class="alert alert-warning alert-dismissible bg-success" role="alert">
+                    <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">×</span></button>
+                    {{ message | safe }}
+                </div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+</div>
+
+{% block body %}{% endblock %}
+</body>
+
+<footer class="footer">
+    <p style="width: 100%; text-align: center" >&copy;  <a href="http://twitter.com/iMLordJ">Twitter - @iMLordJ</a> 2016 </p>
+</footer>
 </html>

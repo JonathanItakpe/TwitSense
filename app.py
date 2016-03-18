@@ -4,23 +4,21 @@ from flask_oauth import OAuth
 from bokeh.embed import components
 from bokeh.charts import Bar
 import pandas as pd
+# from flask.ext.sqlalchemy import SQLAlchemy
 from twitter_search import search_twitter
 import classifier as act
 from parse_config import parse_config
-import os,time
-
-# configuration
-# SQLAlchemy database configuration. Here we are using postgresql
-# database
-
-SECRET_KEY = os.urandom(32)
-# SECRET_KEY = 'damn-this-shit-sucks-bad'
-DEBUG = True
+import os
+import psycopg2
 
 # setup flask
 app = Flask(__name__)
-app.debug = DEBUG
+app.config.from_object(__name__)
+db_conn = 'postgresql+psycopg2://public:C@ntH@ck@localhost/twitsense'
+SECRET_KEY = os.urandom(32)
+
 app.secret_key = SECRET_KEY
+# app.config['SQLALCHEMY_DATABASE_URI'] = db_conn
 oauth = OAuth()
 
 # Get Consumer Keys
@@ -107,11 +105,11 @@ def oauth_authorized(resp):
 def getresult():
     checked_url = False
     try:
-
-        # RECEIVE DATA FROM INDEX WEB PAGE
+            # RECEIVE DATA FROM INDEX WEB PAGE
         if 'noTweets' in request.form:
             no_tweets = request.form['noTweets']
         else:
+            checked_url = True  # Used to determine if i used the initial form or the advanced options
             no_tweets = 300
 
         if 'selClf' in request.form:
@@ -132,6 +130,7 @@ def getresult():
         print str(no_tweets)
         print name_clf
         print str(checked_url)
+
         # GET USER ACCESS KEYS
         token = session['twitter_token'][0]
         token_secret = session['twitter_token'][1]
@@ -140,25 +139,30 @@ def getresult():
         # data = get_data(query, token=token, token_secret=token_secret)
 
         print 'Loading ' + name_clf + ' classifier...'
+        flash('Loading ' + name_clf + ' classifier...')
         clf = act.load_classifier(classifier=name_clf)
-        print 'Classifier completely loaded'
+        print "Classifier completely loaded"
+        flash(u"Classifier completely loaded")
 
         print 'Connecting to Twitter...'
         print 'Getting ' + str(no_tweets) + ' tweets'
+        flash('Getting ' + str(no_tweets) + ' tweets')
         twitter_result = search_twitter(query, no_tweets=no_tweets, token=token, token_secret=token_secret)
         print str(no_tweets) + 'Tweets Retrieved Successfully!'
 
-        if checked_url==True:
+        if checked_url:
             print 'Removing Tweets containing URL...'
             twitter_result = act.removeTweetsWithUrl(twitter_result)
             print 'Removed tweets containing URL'
 
         print 'Trying to create a Pandas DataFrame...'
         print 'Classifying Tweets...'
+        flash(u'Classifying Tweets...')
         data = act.toDataFrame(twitter_result, clf)
         print 'Tweets classified Correctly!'
 
         print 'Finishing up the DataSet'
+        flash(u"Finishing up the DataSet")
         data = act.post_dataset(data)
         print 'DONE with dataset'
 
@@ -178,7 +182,7 @@ def performComputation(data):
 
         # PLOT SENTIMENT BAR CHART
         # create a new plot with a title and axis labels
-        p = Bar(data['sentiment'].value_counts(), title='Tweets per Sentiment', width=400, height=400,
+        p = Bar(data['sentiment'].value_counts(), title='Tweets per Sentiment', width=300, height=300,
                 xlabel='Sentiment', ylabel='Count')
         # output_file("histogram.html")
         # show(p)
@@ -218,6 +222,25 @@ def performComputation(data):
     except Exception as e:
         print e
         return render_template('error.html', error=e)
+
+
+@app.route('/extendSub', methods=['POST'])
+def extendsub():
+    conn = psycopg2.connect(database='twitsense', user='postgres', password='C@ntH@ck', host='localhost')
+    cursor = conn.cursor()
+
+    txt_tweet = request.form['txtTweet']
+    print txt_tweet
+    txt_sentiment = request.form['txtSentiment']
+    print txt_sentiment
+
+    query = "INSERT INTO public.extend_train (tweet_text, sentiment) VALUES (%s, %s);"
+    data = (txt_tweet, txt_sentiment)
+
+    cursor.execute(query, data)
+    conn.commit()
+
+    flash(u'Successfully Sent!')
 
 
 if __name__ == '__main__':

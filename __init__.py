@@ -1,4 +1,4 @@
 from flask import Flask
 
 app = Flask(__name__)
-from app import views
+SQLALCHEMY_TRACK_MODIFICATIONS=False

@@ -1,135 +1,98 @@
-<!DOCTYPE html>
-<!--suppress ALL -->
-<html lang="en">
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<head>
-    <title>Twit-Sense: Making sense of unstructured text...</title>
-    <link rel="shortcut icon" href="{{ url_for('static', filename='favicon.ico') }}">
-    <script src="https://code.jquery.com/jquery-2.2.0.min.js"></script>
-
-    <!-- Latest compiled and minified CSS -->
-    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css" integrity="sha384-1q8mTJOASx8j1Au+a5WDVnPi2lkFfwwEAa8hDDdjZlpLegxhjVME1fgjWPGmkzs7" crossorigin="anonymous">
-
-    <!-- Optional theme -->
-    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap-theme.min.css" integrity="sha384-fLW2N01lMqjakBkx3l/M9EahuwpSfeNvV63J5ezn3uZzapT0u7EYsXMjQV+0En5r" crossorigin="anonymous">
-
-    <!-- Latest compiled and minified JavaScript -->
-    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js" integrity="sha384-0mSbJDEHialfmuBBQP6A4Qrprq5OVfW37PRR3j5ELqxss1yVqOtnepnHVP9aJ7xS" crossorigin="anonymous"></script>
-
-    <link rel="stylesheet" href="https://cdn.pydata.org/bokeh/release/bokeh-0.11.1.min.css" type="text/css" />
-
-    <script type="text/javascript" src="https://cdn.pydata.org/bokeh/release/bokeh-0.11.1.min.js"></script>
-
-    <script type="text/javascript">
-    Bokeh.set_log_level("info");
-    </script>
-
+{% extends "base_result.html" %}
+{% block body %}
     <script type="text/javascript">
         $(function(){
-    $("tr").each(function(){
-      var col_val = $(this).find("td:eq(1)").text();
-        console.log(col_val)
-      if ($.trim(col_val) == "positive"){
-        $(this).addClass('success');  //the selected class colors the row green//
-      } else if ($.trim(col_val) == "negative"){
-        $(this).addClass('danger');
-      }
-    });
-    });
-    </script>
-
-    <script type="text/javascript">
-        $(function(){
-                var dataSet = JSON.parse(JSON.stringify({{ data|safe }}));
-				var div_pos = $('<div>')
-                .attr('class', 'list-group')
-                .append($('<a>')
-                .attr('class', 'list-group-item list-group-item-success').attr('href', '#')
-                .append($('<h4>')
-                .attr('class', 'list-group-item-heading'),
-                $('<p>')
-                .attr('class', 'list-group-item-text'),
-                $('<h5>')
-                .attr('class', 'list-group-item-text'),
-                $('<h6>').attr('class', 'list-group-item-text')));
-
-                var div_neg = $('<div>')
-                .attr('class', 'list-group')
-                .append($('<a>')
-                .attr('class', 'list-group-item list-group-item-danger')
-                .append($('<h4>').attr('class', 'list-group-item-heading'),
-                $('<p>').attr('class', 'list-group-item-text'),
-                $('<h5>').attr('class', 'list-group-item-text'),
-                $('<h6>').attr('class', 'list-group-item-text')));
-
-                var tweet = '';
-
-
-                $.each(dataSet, function(index, value){
-                    if (value.sentiment == 'positive') {
-                        tweet = $(div_pos).clone();
-                    } else if (value.sentiment == 'negative') {
-                        tweet = $(div_neg).clone();
-                    }
-					$(tweet).find('h4').text(value.tweetText).addClass('blockquote')
-                    $(tweet).find('p').text('Sentiment: ' + value.sentiment).addClass('text-left').addClass('text-info')
-                    $(tweet).find('h5').text('Weight: ' + value.weight).addClass('text-left').addClass('text-info')
-                    $(tweet).find('h6').text('Created: ' + value.timeCreated).addClass('text-left').addClass('text-info')
-					$('#tweets').append(tweet);
-				});
+            $("tr").each(function(){
+                var col_val = $(this).find("td:eq(1)").text();
+                console.log(col_val)
+                if ($.trim(col_val) == "positive"){
+                    $(this).addClass('success');  //the selected class colors the row green//
+                } else if ($.trim(col_val) == "negative"){
+                    $(this).addClass('danger');
+                }
             });
+        });
     </script>
 
-</head>
+    <script type="text/javascript">
+        $(function(){
+            var dataSet = JSON.parse(JSON.stringify({{ data|safe }}));
+            var div_pos = $('<div>')
+                    .attr('class', 'list-group')
+                    .append($('<a>')
+                            .attr('class', 'list-group-item list-group-item-success').attr('href', '#')
+                            .append($('<h4>')
+                                    .attr('class', 'list-group-item-heading'),
+                                    $('<p>')
+                                            .attr('class', 'list-group-item-text'),
+                                    $('<h5>')
+                                            .attr('class', 'list-group-item-text'),
+                                    $('<h6>').attr('class', 'list-group-item-text')));
 
-<body>
+            var div_neg = $('<div>')
+                    .attr('class', 'list-group')
+                    .append($('<a>')
+                            .attr('class', 'list-group-item list-group-item-danger')
+                            .append($('<h4>').attr('class', 'list-group-item-heading'),
+                                    $('<p>').attr('class', 'list-group-item-text'),
+                                    $('<h5>').attr('class', 'list-group-item-text'),
+                                    $('<h6>').attr('class', 'list-group-item-text')));
+
+            var tweet = '';
+
+
+            $.each(dataSet, function(index, value){
+                if (value.sentiment == 'positive') {
+                    tweet = $(div_pos).clone();
+                } else if (value.sentiment == 'negative') {
+                    tweet = $(div_neg).clone();
+                }
+                $(tweet).find('h4').text(value.tweetText).addClass('blockquote')
+                $(tweet).find('p').text('Sentiment: ' + value.sentiment).addClass('text-left').addClass('text-info')
+                $(tweet).find('h5').text('Weight: ' + value.weight).addClass('text-left').addClass('text-info')
+                $(tweet).find('h6').text('Created: ' + value.timeCreated).addClass('text-left').addClass('text-info')
+                $('#tweets').append(tweet);
+            });
+        });
+    </script>
+
     <div class="container-fluid">
-        <div class="page-header">
-            <nav>
-                <ul class="nav nav-pills pull-right">
-                    <li role="presentation" class="active"><a href="/">Home</a>
-                    </li>
-                </ul>
-            </nav>
-            <h1 class="text-muted">Twit-Sense</h1>
+        <div class="row">
+            <div id="tweets" class="col-md-6" style="overflow-y:scroll; height:550px">
+                <p><strong>Top 10 Tweets about </strong><strong class="text-uppercase text-info"> {{ query }} </strong></p><br>
+
             </div>
+
+            <div id="bar_chart" class="col-md-6" style="height: 400px">
+                <p><strong>Sentiment Charts: </strong><strong class="text-uppercase text-info"> {{ query }} </strong></p><br>
+                {{ div_bar | safe }}
+                {{ script_bar | safe }}
+            </div>
+        </div>
+
+        <div class="row">
+            <p><strong>Word Cloud</strong></p><br>
+            <div id="word-cloud" class="col-md-6">
+
+            </div>
+
+            <div class="col-md-6">
+                <p><strong>Name</strong></p><br>
+
+            </div>
+        </div>
         <br>
-    <div class="row">
-        <div id="tweets" class="col-md-6" style="overflow-y:scroll; height:550px">
-            <p><strong>Top 10 Tweets about </strong><strong class="text-uppercase text-info"> {{ query }} </strong></p><br>
-
-        </div>
-
-        <div id="bar_chart" class="col-md-6" style="height: 400px">
-            <p><strong>Sentiment Charts: </strong><strong class="text-uppercase text-info"> {{ query }} </strong></p><br>
-            {{ div_bar | safe }}
-            {{ script_bar | safe }}
-        </div>
-    </div>
-
-    <div class="row">
-        <p><strong>Word Cloud</strong></p><br>
-        <div id="word-cloud" class="col-md-6">
-
-        </div>
-
-        <div class="col-md-6">
-            <p><strong>Name</strong></p><br>
-
-        </div>
-    </div>
-    <br>
         <div id="tbl">
             <p class="lead"></p>
             {{ full_data.to_html(classes="table table-striped table-responsive table-hover clickable-row") | safe}}
         </div>
 
         <script type="text/javascript">
-        $("tr").click(function(){
-        $("#extendModal").modal("show");
-        $("#txtTweet").val($(this).closest('tr').children()[1].textContent);
-        $("#txtSentiment").val($(this).closest('tr').children()[2].textContent);
-        });
+            $("tr").click(function(){
+                $("#extendModal").modal("show");
+                $("#txtTweet").val($(this).closest('tr').children()[1].textContent);
+                $("#txtSentiment").val($(this).closest('tr').children()[2].textContent);
+            });
         </script>
 
         <div class="modal fade" id="extendModal">
@@ -140,28 +103,25 @@
                         <h4 class="modal-title">Correct A Wrong Classification</h4>
                     </div>
                     <div class="modal-body">
-                        <div class="form-group">
-                            <label for="txtTweet">Tweet:</label>
-                            <textarea class="form-control" rows="2" id="txtTweet" readonly></textarea>
-                        </div>
-                        <div class="form-group">
-                            <label for="txtSentiment">Sentiment:</label>
-                            <input class="form-control" id="txtSentiment" readonly>
-                        </div>
+                        <form action="/extendSub" method="post" name="formExtend">
+                            <div class="form-group">
+                                <label for="txtTweet">Tweet:</label>
+                                <textarea class="form-control" rows="2" id="txtTweet" name="txtTweet" readonly></textarea>
+                            </div>
+                            <div class="form-group">
+                                <label for="txtSentiment">Sentiment:</label>
+                                <input class="form-control" id="txtSentiment" name="txtSentiment" readonly>
+                            </div>
+                            <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                            <button type="submit" class="btn btn-primary">Save Changes</button>
+                        </form>
                     </div>
                     <div class="modal-footer">
-                        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-                        <button type="button" class="btn btn-primary">Save Changes</button>
+
                     </div>
+
                 </div><!-- /.modal-content -->
             </div><!-- /.modal-dialog -->
         </div><!-- /.modal -->
-
-        <footer class="footer">
-            <p>&copy;  <a href="http://twitter.com/iMLordJ">Twitter - @iMLordJ</a> 2016 </p>
-        </footer>
-
     </div>
-</body>
-
-</html>
+{% endblock %}
