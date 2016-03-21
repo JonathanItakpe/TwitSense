@@ -1,10 +1,10 @@
-from flask import Flask
-from flask import render_template, redirect, request, url_for, session, g, flash
+from flask import Flask, make_response
+from flask import render_template, redirect, request, url_for, session, g, flash, Response
 from flask_oauth import OAuth
 from bokeh.embed import components
 from bokeh.charts import Bar
 import pandas as pd
-# from flask.ext.sqlalchemy import SQLAlchemy
+
 from twitter_search import search_twitter
 import classifier as act
 from parse_config import parse_config
@@ -101,21 +101,22 @@ def oauth_authorized(resp):
     return redirect(url_for('home'))
 
 
+# noinspection PyPackageRequirements
 @app.route('/getResult', methods=['POST'])
 def getresult():
     checked_url = False
     try:
-            # RECEIVE DATA FROM INDEX WEB PAGE
+        # RECEIVE DATA FROM INDEX WEB PAGE
         if 'noTweets' in request.form:
             no_tweets = request.form['noTweets']
         else:
             checked_url = True  # Used to determine if i used the initial form or the advanced options
-            no_tweets = 300
+            no_tweets = 150
 
         if 'selClf' in request.form:
             name_clf = request.form['selClf']
         else:
-            name_clf = 'Naive Bayes'
+            name_clf = 'Maximum Enthropy'
 
         if 'advQuery' in request.form:
             query = request.form['advQuery']
@@ -139,14 +140,11 @@ def getresult():
         # data = get_data(query, token=token, token_secret=token_secret)
 
         print 'Loading ' + name_clf + ' classifier...'
-        flash('Loading ' + name_clf + ' classifier...')
         clf = act.load_classifier(classifier=name_clf)
         print "Classifier completely loaded"
-        flash(u"Classifier completely loaded")
 
         print 'Connecting to Twitter...'
         print 'Getting ' + str(no_tweets) + ' tweets'
-        flash('Getting ' + str(no_tweets) + ' tweets')
         twitter_result = search_twitter(query, no_tweets=no_tweets, token=token, token_secret=token_secret)
         print str(no_tweets) + 'Tweets Retrieved Successfully!'
 
@@ -157,19 +155,17 @@ def getresult():
 
         print 'Trying to create a Pandas DataFrame...'
         print 'Classifying Tweets...'
-        flash(u'Classifying Tweets...')
         data = act.toDataFrame(twitter_result, clf)
         print 'Tweets classified Correctly!'
 
         print 'Finishing up the DataSet'
-        flash(u"Finishing up the DataSet")
         data = act.post_dataset(data)
         print 'DONE with dataset'
 
-        top10, script_bar, div_bar, all_data = performComputation(data)
-
-        return render_template('result2.html', data=top10.to_json(orient='records'), query=query, script_bar=script_bar,
-                               div_bar=div_bar, full_data=all_data)
+        script_bar, div_bar, all_data, piedata, freq = performComputation(data)
+        # data=top10.to_json(orient='records'),
+        return render_template('result2.html', query=query, script_bar=script_bar,
+                               div_bar=div_bar, full_data=all_data, piedata=piedata, freq=freq)
     except Exception as e:
         print e
         return render_template('error.html', error=e)
@@ -179,19 +175,29 @@ def performComputation(data):
     try:
         # SELECT IMPORTANT COMPONENTS
         data = data[['tweetText', 'sentiment', 'weight', 'timeCreated']]
+        sentiment_valcounts = data['sentiment'].value_counts()
 
-        # PLOT SENTIMENT BAR CHART
+        # PLOT SENTIMENT BAR CHART (BOKEH)
         # create a new plot with a title and axis labels
-        p = Bar(data['sentiment'].value_counts(), title='Tweets per Sentiment', width=300, height=300,
+        p = Bar(sentiment_valcounts, title='Tweets per Sentiment', width=400, height=400,
                 xlabel='Sentiment', ylabel='Count')
+        print sentiment_valcounts
         # output_file("histogram.html")
         # show(p)
         script_bar, div_bar = components(p)
         # END OF BAR CHART
-        '''
+
+        # PIE/DONUT CHART (google api)
+        s = sentiment_valcounts.to_frame()  # Convert series to dataframe
+        sentiment_labels = list(s.index)  # Get the index [positive or negative]
+        sentiment_values = [sentiment_valcounts[0], sentiment_valcounts[1]]
+        piedata = [(sentiment_labels[0], sentiment_valcounts[0]), (sentiment_labels[1], sentiment_valcounts[1])]
+        # END PIE
+
+
         # WORDCLOUD
         # Get Stop Words
-        stop = getStopWordList()
+        stop = act.getStopWordList()
 
         text = data['tweetText']
 
@@ -212,13 +218,17 @@ def performComputation(data):
         # How many max words do we want to give back
         freq = freq.ix[0:50]
 
-        print freq.keys()[:20]
-        # END OF WORDCLOUD
-        '''
-        # SELECT TOP 10 TWEETS
-        data_tweets = data.head(10)
+        # print freq.keys()[:20]
 
-        return data_tweets, script_bar, div_bar, data
+        freq_json = freq.to_json()
+
+        # response.headers.add('Access-Control-Allow-Origin', "*")
+        # END OF WORDCLOUD
+
+        # SELECT TOP 10 TWEETS
+        # data_tweets = data.head(10)
+
+        return script_bar, div_bar, data, piedata, freq_json
     except Exception as e:
         print e
         return render_template('error.html', error=e)
@@ -240,7 +250,7 @@ def extendsub():
     cursor.execute(query, data)
     conn.commit()
 
-    flash(u'Successfully Sent!')
+    return redirect(url_for('getresult'))
 
 
 if __name__ == '__main__':

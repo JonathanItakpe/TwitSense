@@ -6,6 +6,7 @@
     <orderEntry type="sourceFolder" forTests="false" />
     <orderEntry type="library" name="jquery-latest" level="application" />
     <orderEntry type="library" name="bokeh-0.11.1" level="application" />
+    <orderEntry type="library" name="loader" level="application" />
   </component>
   <component name="TemplatesService">
     <option name="TEMPLATE_CONFIGURATION" value="Jinja2" />
