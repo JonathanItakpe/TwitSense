@@ -1,9 +1,12 @@
 from flask import Flask, make_response
-from flask import render_template, redirect, request, url_for, session, g, flash, Response
+from flask import render_template, redirect, request, url_for, session, g, flash, Response, jsonify
 from flask_oauth import OAuth
 from bokeh.embed import components
 from bokeh.charts import Bar
 import pandas as pd
+import json
+import string, random
+import numpy as np
 
 from twitter_search import search_twitter
 import classifier as act
@@ -93,7 +96,7 @@ def oauth_authorized(resp):
     access_token = resp['oauth_token']
     session['access_token'] = access_token
     session['screen_name'] = resp['screen_name']
-
+    session['uid'] = id_generator() + session['screen_name']
     session['twitter_token'] = (
         resp['oauth_token'],
         resp['oauth_token_secret']
@@ -111,7 +114,7 @@ def getresult():
             no_tweets = request.form['noTweets']
         else:
             checked_url = True  # Used to determine if i used the initial form or the advanced options
-            no_tweets = 150
+            no_tweets = 50
 
         if 'selClf' in request.form:
             name_clf = request.form['selClf']
@@ -164,8 +167,26 @@ def getresult():
 
         script_bar, div_bar, all_data, piedata, freq = performComputation(data)
         # data=top10.to_json(orient='records'),
-        return render_template('result2.html', query=query, script_bar=script_bar,
-                               div_bar=div_bar, full_data=all_data, piedata=piedata, freq=freq)
+        resp = make_response(render_template('result2.html', query=query, script_bar=script_bar,
+                                             div_bar=div_bar, full_data=all_data, piedata=piedata, freq=freq))
+
+        # SAVING THE IMPORTANT COMPONENTS TO A COOKIE IN ORDER TO RETRIEVE AFTER PASSING THE CORRECT VALUE TO THE DB
+        # Check /extendSub
+        resp.set_cookie('query', query)
+        resp.set_cookie('script', script_bar)
+        resp.set_cookie('div_bar', div_bar)
+        resp.set_cookie('full_data', all_data.to_json(orient='records'))
+        print pd.read_json(request.cookies.get('full_data'), orient='records')
+        resp.set_cookie('pie_data', json.dumps(piedata))  # Converting to json
+        resp.set_cookie('freq', freq)
+
+        # Writing Script_div to file, all other methods failed
+        file_loc = 'scripts/' + session['uid'] + 'script.txt'  # Create new file based on UID Declared above
+        f = open(file_loc, 'w')
+        f.write(script_bar)
+        # End of WRITE!
+
+        return resp
     except Exception as e:
         print e
         return render_template('error.html', error=e)
@@ -191,7 +212,9 @@ def performComputation(data):
         s = sentiment_valcounts.to_frame()  # Convert series to dataframe
         sentiment_labels = list(s.index)  # Get the index [positive or negative]
         sentiment_values = [sentiment_valcounts[0], sentiment_valcounts[1]]
-        piedata = [(sentiment_labels[0], sentiment_valcounts[0]), (sentiment_labels[1], sentiment_valcounts[1])]
+        piedata = [(sentiment_labels[0], np.asscalar(sentiment_valcounts[0])),  # Converting from numpy Int64 to normal int
+                   (sentiment_labels[1], np.asscalar(sentiment_valcounts[1]))]  # Converting from numpy Int64 to normal int
+
         # END PIE
 
 
@@ -249,8 +272,60 @@ def extendsub():
 
     cursor.execute(query, data)
     conn.commit()
+    conn.close()
 
-    return redirect(url_for('getresult'))
+    flash(u'Successfully Edited the Classification, changes will be effected within 24 hours!')
+
+    query_ = request.cookies.get('query')
+
+    # GETTING THE SCRIPT FOR THE BAR CHART STORED IN A TEXT FILE
+    file_loc = 'scripts/' + session['uid'] + 'script.txt'  # Create new file based on UID Declared above
+    with open(file_loc, 'r') as f:
+        script_bar = f.read()
+    os.remove(file_loc)  # Delete file just for safety reasons
+    # DONE
+
+    div_bar = request.cookies.get('div_bar')
+    all_data = pd.read_json(request.cookies.get('full_data'), orient='records')
+
+    # Rearranging the columns such that the initial DF is same as the converted ones
+    all_data = all_data[['tweetText', 'sentiment', 'weight', 'timeCreated']]
+    piedata = json.loads(request.cookies.get('pie_data'))
+    freq = request.cookies.get('freq')
+
+    return render_template('result2.html', query=query_, script_bar=script_bar,
+                           div_bar=div_bar, full_data=all_data, piedata=piedata,
+                           freq=freq)
+
+
+def id_generator(size=6, chars=string.ascii_uppercase + string.digits):
+    return ''.join(random.choice(chars) for _ in range(size))
+
+
+def storeinDB(uid, script):
+    script = str(script)
+    conn = psycopg2.connect(database='twitsense', user='postgres', password='C@ntH@ck', host='localhost')
+    cursor = conn.cursor()
+
+    query = "INSERT INTO public.transfer (_id, script) VALUES (%s, %s);"
+    data = (uid, script)
+
+    cursor.execute(query, data)
+    conn.commit()
+    conn.close()
+
+
+def retrieveDB(uid):
+    conn = psycopg2.connect(database='twitsense', user='postgres', password='C@ntH@ck', host='localhost')
+    cur = conn.cursor()
+
+    query = "SELECT script from public.transfer WHERE _id = %s;"
+    param = uid
+    cur.execute(query, param)
+
+    data = cur.fetchone()
+    print jsonify(data)
+    return jsonify(data)
 
 
 if __name__ == '__main__':
