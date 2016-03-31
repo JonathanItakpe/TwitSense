@@ -1,18 +1,21 @@
-from bokeh.sampledata.autompg import autompg as df
-from bokeh.charts import Bar, output_file, show
-import pandas as pd
-# GET TWEETS DATA FRAME BASED ON SEARCH QUERY
-from classifier import get_data
+#
+# Small script to show PostgreSQL and Pyscopg together
+#
 
-data = get_data('Adidas')
+import psycopg2
 
-# SELECT IMPORTANT COMPONENTS
-data = data[['tweetText', 'sentiment', 'weight', 'timeCreated']]
+try:
+    conn = psycopg2.connect(database='twitsense', user='postgres', password='C@ntH@ck', host='localhost')
+except:
+    print "I am unable to connect to the database"
 
-# PLOT SENTIMENT BAR CHART
-data2 = data['sentiment'].value_counts()
+cur = conn.cursor()
 
-# create a new plot with a title and axis labels
-p = Bar(data2, title='Tweets per Sentiment')
-output_file("histogram.html")
-show(p)
+cur.execute("""SELECT tweet_text, sentiment from extend_train""")
+
+rows = cur.fetchall()
+
+print rows
+
+for row in rows:
+    print "   ", row[0]

@@ -14,15 +14,18 @@ from parse_config import parse_config
 import os
 import psycopg2
 
+
 # setup flask
 app = Flask(__name__)
 app.config.from_object(__name__)
-db_conn = 'postgresql+psycopg2://public:C@ntH@ck@localhost/twitsense'
-SECRET_KEY = os.urandom(32)
-
+SECRET_KEY = os.urandom(20)
 app.secret_key = SECRET_KEY
-# app.config['SQLALCHEMY_DATABASE_URI'] = db_conn
 oauth = OAuth()
+
+# Unicode Stringy Wahala!
+# Ionno how this works but it fixes the ASCII error on Admin Page
+psycopg2.extensions.register_type(psycopg2.extensions.UNICODE)
+psycopg2.extensions.register_type(psycopg2.extensions.UNICODEARRAY)
 
 # Get Consumer Keys
 my_config = parse_config()
@@ -82,7 +85,7 @@ def login():
 def logout():
     session.pop('screen_name', None)
     flash('You were signed out')
-    return redirect(request.referrer or url_for('index'))
+    return render_template('login.html')
 
 
 @app.route('/oauth-authorized')
@@ -176,7 +179,7 @@ def getresult():
         resp.set_cookie('script', script_bar)
         resp.set_cookie('div_bar', div_bar)
         resp.set_cookie('full_data', all_data.to_json(orient='records'))
-        print pd.read_json(request.cookies.get('full_data'), orient='records')
+        # print pd.read_json(request.cookies.get('full_data'), orient='records')
         resp.set_cookie('pie_data', json.dumps(piedata))  # Converting to json
         resp.set_cookie('freq', freq)
 
@@ -184,6 +187,7 @@ def getresult():
         file_loc = 'scripts/' + session['uid'] + 'script.txt'  # Create new file based on UID Declared above
         f = open(file_loc, 'w')
         f.write(script_bar)
+        f.close()
         # End of WRITE!
 
         return resp
@@ -282,6 +286,7 @@ def extendsub():
     file_loc = 'scripts/' + session['uid'] + 'script.txt'  # Create new file based on UID Declared above
     with open(file_loc, 'r') as f:
         script_bar = f.read()
+    f.close()
     os.remove(file_loc)  # Delete file just for safety reasons
     # DONE
 
@@ -326,6 +331,58 @@ def retrieveDB(uid):
     data = cur.fetchone()
     print jsonify(data)
     return jsonify(data)
+
+
+# ADMIN  ADMIN  ADMIN  ADMIN  ADMIN  ADMIN  ADMIN  ADMIN  ADMIN  ADMIN  ADMIN
+@app.route('/adminStart')
+def admin():
+    # Getting Extended Training set --- Created by user
+    try:
+        conn = psycopg2.connect(database='twitsense', user='postgres', password='C@ntH@ck', host='localhost')
+    except:
+        print "I am unable to connect to the database"
+
+    cur = conn.cursor()
+
+    cur.execute("""SELECT tweet_text, sentiment from extend_train""")
+
+    rows = cur.fetchall()
+
+    # json_data = json.dumps(rows)
+
+    try:
+        if session['admin']:
+            return render_template('admin.html', results=rows)
+    except KeyError:
+        return render_template('admin_login.html')
+
+
+@app.route('/loginAdmin', methods=["POST"])
+def loginAdmin():
+    user = request.form['inputEmail']
+    password = request.form['inputPassword']
+
+    # Getting Extended Training set --- Created by user
+    try:
+        conn = psycopg2.connect(database='twitsense', user='postgres', password='C@ntH@ck', host='localhost')
+    except:
+        print "I am unable to connect to the database"
+
+    cur = conn.cursor()
+
+    cur.execute("""SELECT tweet_text, sentiment from extend_train""")
+
+    rows = cur.fetchall()
+
+    # json_data = json.dump(rows)
+
+    if user == 'jonathanitakpe@gmail.com' and password == 'C@ntH@ck':
+        session['admin'] = user
+        for row in rows:
+            print row[0], row[1]
+        return render_template("admin.html", results=rows)
+    else:
+        return render_template("admin_login.html")
 
 
 if __name__ == '__main__':

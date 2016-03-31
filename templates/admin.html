@@ -1,0 +1,22 @@
+{% extends "base_admin.html" %}
+{% block body %}
+    <div class="container" style="width: 60%">
+        <div id="tbl">
+            <p class="lead"></p>
+            <table class="table table-striped table-responsive table-hover">
+                <thead>
+                <tr>
+                    <th>Tweet Text</th>
+                    <th>Sentiment</th>
+                </tr>
+                </thead>
+                {% for result in results %}
+                    <tr>
+                        <td>{{ result[0] }}</td>
+                        <td>{{ result[1] }}</td>
+                    </tr>
+                {% endfor %}
+            </table>
+        </div>
+    </div>
+{% endblock %}
