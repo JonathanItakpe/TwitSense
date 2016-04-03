@@ -44,24 +44,23 @@ def getStopWordList():
     # read the stopwords file and build a list
     punctuation = list(string.punctuation)
     stop = stopwords.words('english') + punctuation + ['AT_USER', 'URL', 'url', 'retweet', 'rt', 'at_user', 'RT']
-
     return stop
 
 
 # preprocess creates the term frequency matrix for the review data set
 def feature_selection():
     tweet, sentiment = load_file()
-    count_vectorizer = HashingVectorizer(binary='true', decode_error='replace',
+    hashing_vectorizer = CountVectorizer(binary='true', decode_error='replace',
                                          stop_words=getStopWordList(), ngram_range=(1, 2))
-    data = count_vectorizer.fit_transform(tweet)
+    data = hashing_vectorizer.fit_transform(tweet)
     tfidf_data = TfidfTransformer(use_idf=False).fit_transform(data)
-
-    return tfidf_data
+    print tfidf_data
+    # return tfidf_data
 
 
 def learn_model(data, target):
     # preparing data for split validation. 60% training, 40% test
-    data_train, data_test, target_train, target_test = cross_validation.train_test_split(data, target, test_size=0.002,
+    data_train, data_test, target_train, target_test = cross_validation.train_test_split(data, target, test_size=0.4,
                                                                                          random_state=43)
     classifier = LogisticRegression().fit(data_train, target_train)
     predicted = classifier.predict(data_test)
@@ -88,4 +87,5 @@ def main():
     learn_model(tf_idf, target)
 
 
-main()
+if __name__ == '__main__':
+    feature_selection()

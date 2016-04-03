@@ -45,47 +45,6 @@
         });
     </script>
 
-    {#    <script type="text/javascript">
-        $(function(){
-            var dataSet = JSON.parse(JSON.stringify({{ data|safe }}));
-            var div_pos = $('<div>')
-                    .attr('class', 'list-group')
-                    .append($('<a>')
-                            .attr('class', 'list-group-item list-group-item-success').attr('href', '#')
-                            .append($('<h4>')
-                                    .attr('class', 'list-group-item-heading'),
-                                    $('<p>')
-                                            .attr('class', 'list-group-item-text'),
-                                    $('<h5>')
-                                            .attr('class', 'list-group-item-text'),
-                                    $('<h6>').attr('class', 'list-group-item-text')));
-
-            var div_neg = $('<div>')
-                    .attr('class', 'list-group')
-                    .append($('<a>')
-                            .attr('class', 'list-group-item list-group-item-danger')
-                            .append($('<h4>').attr('class', 'list-group-item-heading'),
-                                    $('<p>').attr('class', 'list-group-item-text'),
-                                    $('<h5>').attr('class', 'list-group-item-text'),
-                                    $('<h6>').attr('class', 'list-group-item-text')));
-
-            var tweet = '';
-
-
-            $.each(dataSet, function(index, value){
-                if (value.sentiment == 'positive') {
-                    tweet = $(div_pos).clone();
-                } else if (value.sentiment == 'negative') {
-                    tweet = $(div_neg).clone();
-                }
-                $(tweet).find('h4').text(value.tweetText).addClass('blockquote')
-                $(tweet).find('p').text('Sentiment: ' + value.sentiment).addClass('text-left').addClass('text-info')
-                $(tweet).find('h5').text('Weight: ' + value.weight).addClass('text-left').addClass('text-info')
-                $(tweet).find('h6').text('Created: ' + value.timeCreated).addClass('text-left').addClass('text-info')
-                $('#tweets').append(tweet);
-            });
-        });
-    </script>#}
 
     <div class="container-fluid">
         <div class="row" style="border: solid #6dfffa; background-color: #1b6d85">
@@ -108,6 +67,7 @@
             {{ full_data.to_html(classes="table table-striped table-responsive table-hover clickable-row") | safe}}
         </div>
 
+        <!-- Getting content from table into the modal -->
         <script type="text/javascript">
             $("tr").click(function(){
                 $("#extendModal").modal("show");

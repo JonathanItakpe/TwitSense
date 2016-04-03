@@ -5,6 +5,9 @@ from sklearn.pipeline import Pipeline
 from sklearn.linear_model import LogisticRegression
 from sklearn.naive_bayes import BernoulliNB
 from sklearn.svm import LinearSVC
+from sklearn.metrics import classification_report, confusion_matrix
+import numpy as np
+from sklearn.metrics import accuracy_score
 import string
 from nltk.corpus import stopwords
 from sklearn.externals import joblib
@@ -111,12 +114,82 @@ def trainMaxEnt(tweets__, sentiments__):
     _ = joblib.dump(vec_clf, 'pickle/Maximum Enthropy.pkl', compress=9)
 
 
+def load_clf(clf_name):
+    print 'Loading ' + clf_name + ' Classifier...'
+    classifier = joblib.load('pickle/' + clf_name + '.pkl')
+    return classifier
+
+
+def load_test_data():
+    test_sentiment = []
+    test_tweet = []
+
+    # Getting test data set
+    with open('data/testdata.csv', 'rb') as csv_file:
+        reader = csv.reader(csv_file, delimiter=",")
+        reader.next()
+
+        for row in reader:
+            # skip missing data
+            if row[0] and row[5]:
+                if row[0] == '0':
+                    test_sentiment.append('negative')
+                elif row[0] == '4':
+                    test_sentiment.append('positive')
+                test_tweet.append(processTweet(row[5]))  # .decode('latin-1').encode('utf-8'))
+    # End
+    return test_tweet, test_sentiment
+
+
+def get_sentiment(tweets, classifier):
+    sentiment = []
+    for tweet in tweets:
+        tweet = processTweet(tweet)
+        tweet = [tweet]
+        sentiment.append(str(classifier.predict(tweet)[0]))
+    print tweets
+    print sentiment
+    return sentiment
+
+
+def evaluate_model(target_true, target_predicted):
+    confusion = np.array([[0, 0], [0, 0]])
+    print classification_report(target_true, target_predicted)
+    confusion += confusion_matrix(target_true, target_predicted)
+    print 'Confusion Matrix:'
+    print confusion
+    print "The accuracy score is {:.2%}".format(accuracy_score(target_true, target_predicted))
+
+
+def test_accuracy(classifier):
+    # Loading the test data
+    tweet_test, sentiment_test = load_test_data()
+
+    # Testing the Classifier
+    clf = load_clf(classifier)
+
+    sentiment_predicted = get_sentiment(tweet_test, clf)
+
+    evaluate_model(sentiment_test, sentiment_predicted)
+
+
 if __name__ == '__main__':
     print 'Reading and pre processing data...'
-    tweets, sentiments = create_tfidf('data/training.1600000.processed.noemoticon.csv')
+    # tweets, sentiments = create_tfidf('data/training.1600000.processed.noemoticon.csv')
 
-    trainMaxEnt(tweets, sentiments)
+    # trainMaxEnt(tweets, sentiments)
 
     # trainNB(tweets, sentiments)
 
     # trainSVM(tweets, sentiments)
+
+    print '\nNAIVE BAYES ACCURACY'
+    test_accuracy('Naive Bayes')
+
+    print '\nMAXIMUM ENTHROPY'
+    test_accuracy('Maximum Enthropy')
+
+    print '\nSUPPORT VECTOR MACHINE'
+    test_accuracy('Support Vector Machine')
+
+

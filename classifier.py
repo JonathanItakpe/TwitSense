@@ -10,7 +10,7 @@ from datetime import datetime
 from nltk.corpus import stopwords
 import string
 
-pd.set_option('display.max_colwidth', -1)
+# pd.set_option('display.max_colwidth', -1)
 
 
 def getStopWordList():
@@ -119,11 +119,11 @@ def post_dataset(DataSet):
                                   x['verified'], x['followerCount']), axis=1)
 
     DataSet.drop_duplicates(subset='tweetText', keep='first', inplace=True)
-    DataSet.sort_values('tweetRetweetCt', ascending=False)
+    DataSet.sort_values('weight', ascending=False)
     return DataSet
 
 
-def get_data(keyword, token, token_secret, classifier='Naive Bayes', no_tweets=300, remove_urls=True):
+def get_data(keyword, token, token_secret, no_tweets=300, remove_urls=True):
     startTime = datetime.now()
     clf = load_classifier()
 

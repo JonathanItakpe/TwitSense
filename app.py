@@ -14,16 +14,16 @@ from parse_config import parse_config
 import os
 import psycopg2
 
-
 # setup flask
 app = Flask(__name__)
 app.config.from_object(__name__)
 SECRET_KEY = os.urandom(20)
 app.secret_key = SECRET_KEY
 oauth = OAuth()
+pd.set_option('display.max_colwidth', -1)
 
 # Unicode Stringy Wahala!
-# Ionno how this works but it fixes the ASCII error on Admin Page
+# Ionno how this works but it fixes the ASCII error on Admin Page when reading from postgresql DB
 psycopg2.extensions.register_type(psycopg2.extensions.UNICODE)
 psycopg2.extensions.register_type(psycopg2.extensions.UNICODEARRAY)
 
@@ -99,7 +99,6 @@ def oauth_authorized(resp):
     access_token = resp['oauth_token']
     session['access_token'] = access_token
     session['screen_name'] = resp['screen_name']
-    session['uid'] = id_generator() + session['screen_name']
     session['twitter_token'] = (
         resp['oauth_token'],
         resp['oauth_token_secret']
@@ -132,12 +131,6 @@ def getresult():
         if 'url' in request.form:
             checked_url = True
 
-        # VERIFY RESULT
-        print query
-        print str(no_tweets)
-        print name_clf
-        print str(checked_url)
-
         # GET USER ACCESS KEYS
         token = session['twitter_token'][0]
         token_secret = session['twitter_token'][1]
@@ -168,27 +161,14 @@ def getresult():
         data = act.post_dataset(data)
         print 'DONE with dataset'
 
-        script_bar, div_bar, all_data, piedata, freq = performComputation(data)
-        # data=top10.to_json(orient='records'),
-        resp = make_response(render_template('result2.html', query=query, script_bar=script_bar,
-                                             div_bar=div_bar, full_data=all_data, piedata=piedata, freq=freq))
+        script_bar, div_bar, all_data, piedata, freq, no_positive, no_negative = performComputation(data)
 
-        # SAVING THE IMPORTANT COMPONENTS TO A COOKIE IN ORDER TO RETRIEVE AFTER PASSING THE CORRECT VALUE TO THE DB
-        # Check /extendSub
-        resp.set_cookie('query', query)
-        resp.set_cookie('script', script_bar)
-        resp.set_cookie('div_bar', div_bar)
-        resp.set_cookie('full_data', all_data.to_json(orient='records'))
-        # print pd.read_json(request.cookies.get('full_data'), orient='records')
-        resp.set_cookie('pie_data', json.dumps(piedata))  # Converting to json
-        resp.set_cookie('freq', freq)
+        top_10_tweets = get_top_tweets(all_data)
 
-        # Writing Script_div to file, all other methods failed
-        file_loc = 'scripts/' + session['uid'] + 'script.txt'  # Create new file based on UID Declared above
-        f = open(file_loc, 'w')
-        f.write(script_bar)
-        f.close()
-        # End of WRITE!
+        resp = make_response(
+            render_template('result3.html', tot_tweets=no_tweets, no_positive=no_positive, no_negative=no_negative,
+                            div_bar=div_bar, script_bar=script_bar, piedata=piedata, freq=freq, topTweets=top_10_tweets,
+                            full_data=all_data, pd=pd))
 
         return resp
     except Exception as e:
@@ -204,7 +184,7 @@ def performComputation(data):
 
         # PLOT SENTIMENT BAR CHART (BOKEH)
         # create a new plot with a title and axis labels
-        p = Bar(sentiment_valcounts, title='Tweets per Sentiment', width=400, height=400,
+        p = Bar(sentiment_valcounts, title='Tweets per Sentiment', height=450,
                 xlabel='Sentiment', ylabel='Count')
         print sentiment_valcounts
         # output_file("histogram.html")
@@ -216,11 +196,16 @@ def performComputation(data):
         s = sentiment_valcounts.to_frame()  # Convert series to dataframe
         sentiment_labels = list(s.index)  # Get the index [positive or negative]
         sentiment_values = [sentiment_valcounts[0], sentiment_valcounts[1]]
-        piedata = [(sentiment_labels[0], np.asscalar(sentiment_valcounts[0])),  # Converting from numpy Int64 to normal int
-                   (sentiment_labels[1], np.asscalar(sentiment_valcounts[1]))]  # Converting from numpy Int64 to normal int
+
+        piedata = [(sentiment_labels[0], np.asscalar(sentiment_valcounts[0])),
+                   # Converting from numpy Int64 to normal int
+                   (sentiment_labels[1],
+                    np.asscalar(sentiment_valcounts[1]))]  # Converting from numpy Int64 to normal int
+
+        no_positive_tweets = np.asscalar(sentiment_valcounts[0])
+        no_negative_tweets = np.asscalar(sentiment_valcounts[1])
 
         # END PIE
-
 
         # WORDCLOUD
         # Get Stop Words
@@ -243,7 +228,7 @@ def performComputation(data):
         freq = p.value_counts()
 
         # How many max words do we want to give back
-        freq = freq.ix[0:50]
+        freq = freq.ix[0:30]
 
         # print freq.keys()[:20]
 
@@ -252,23 +237,20 @@ def performComputation(data):
         # response.headers.add('Access-Control-Allow-Origin', "*")
         # END OF WORDCLOUD
 
-        # SELECT TOP 10 TWEETS
-        # data_tweets = data.head(10)
-
-        return script_bar, div_bar, data, piedata, freq_json
+        return script_bar, div_bar, data, piedata, freq_json, no_positive_tweets, no_negative_tweets
     except Exception as e:
         print e
         return render_template('error.html', error=e)
 
 
-@app.route('/extendSub', methods=['POST'])
+@app.route('/_extend')
 def extendsub():
     conn = psycopg2.connect(database='twitsense', user='postgres', password='C@ntH@ck', host='localhost')
     cursor = conn.cursor()
 
-    txt_tweet = request.form['txtTweet']
+    txt_tweet = request.args.get('text', type=str)
     print txt_tweet
-    txt_sentiment = request.form['txtSentiment']
+    txt_sentiment = request.args.get('sentiment', type=str)
     print txt_sentiment
 
     query = "INSERT INTO public.extend_train (tweet_text, sentiment) VALUES (%s, %s);"
@@ -278,59 +260,27 @@ def extendsub():
     conn.commit()
     conn.close()
 
-    flash(u'Successfully Edited the Classification, changes will be effected within 24 hours!')
+    result_ = 'Successfully Edited the Classification, changes will be effected within 24 hours!'
 
-    query_ = request.cookies.get('query')
-
-    # GETTING THE SCRIPT FOR THE BAR CHART STORED IN A TEXT FILE
-    file_loc = 'scripts/' + session['uid'] + 'script.txt'  # Create new file based on UID Declared above
-    with open(file_loc, 'r') as f:
-        script_bar = f.read()
-    f.close()
-    os.remove(file_loc)  # Delete file just for safety reasons
-    # DONE
-
-    div_bar = request.cookies.get('div_bar')
-    all_data = pd.read_json(request.cookies.get('full_data'), orient='records')
-
-    # Rearranging the columns such that the initial DF is same as the converted ones
-    all_data = all_data[['tweetText', 'sentiment', 'weight', 'timeCreated']]
-    piedata = json.loads(request.cookies.get('pie_data'))
-    freq = request.cookies.get('freq')
-
-    return render_template('result2.html', query=query_, script_bar=script_bar,
-                           div_bar=div_bar, full_data=all_data, piedata=piedata,
-                           freq=freq)
+    return jsonify(result_text=result_)
 
 
-def id_generator(size=6, chars=string.ascii_uppercase + string.digits):
-    return ''.join(random.choice(chars) for _ in range(size))
+# Getting Top tweets based on weight
+def get_top_tweets(df):
+    # Select Text and Weight
+    df = df[['tweetText', 'weight']]
+    df.sort_values('weight', ascending=False)
+    df = pd.concat([df.head(5), df.tail(5)])
+    return df
 
 
-def storeinDB(uid, script):
-    script = str(script)
-    conn = psycopg2.connect(database='twitsense', user='postgres', password='C@ntH@ck', host='localhost')
-    cursor = conn.cursor()
-
-    query = "INSERT INTO public.transfer (_id, script) VALUES (%s, %s);"
-    data = (uid, script)
-
-    cursor.execute(query, data)
-    conn.commit()
-    conn.close()
-
-
-def retrieveDB(uid):
-    conn = psycopg2.connect(database='twitsense', user='postgres', password='C@ntH@ck', host='localhost')
-    cur = conn.cursor()
-
-    query = "SELECT script from public.transfer WHERE _id = %s;"
-    param = uid
-    cur.execute(query, param)
-
-    data = cur.fetchone()
-    print jsonify(data)
-    return jsonify(data)
+@app.route('/_classify')
+def classify_tweet():
+    text = request.args.get('text', 'God is good', type=str)
+    clf = request.args.get('clf', 'Maximum Enthropy', type=str)
+    classifier = act.load_classifier(clf)
+    text_sentiment = act.get_sentiment(text, classifier)
+    return jsonify(sentiment=text_sentiment)
 
 
 # ADMIN  ADMIN  ADMIN  ADMIN  ADMIN  ADMIN  ADMIN  ADMIN  ADMIN  ADMIN  ADMIN
