@@ -60,9 +60,9 @@ def index():
     session.pop('screen_name', None)
     try:
         if session['screen_name']:
-            return render_template('index.html')
+            return render_template('index.html', pgtitle='Home')
     except KeyError:
-        return render_template('login.html')
+        return render_template('login.html', pgtitle='Twitter Login')
 
 
 @app.route('/loginTwitter')
@@ -72,7 +72,7 @@ def home():
         return redirect(url_for('login'))
 
     access_token = access_token[0]
-    return render_template('index.html')
+    return render_template('index.html', pgtitle='Home')
 
 
 @app.route('/login')
@@ -166,7 +166,7 @@ def getresult():
         top_10_tweets = get_top_tweets(all_data)
 
         resp = make_response(
-            render_template('result3.html', tot_tweets=no_tweets, no_positive=no_positive, no_negative=no_negative,
+            render_template('result.html', tot_tweets=no_tweets, no_positive=no_positive, no_negative=no_negative,
                             div_bar=div_bar, script_bar=script_bar, piedata=piedata, freq=freq, topTweets=top_10_tweets,
                             full_data=all_data, pd=pd))
 
@@ -180,7 +180,7 @@ def performComputation(data):
     try:
         # SELECT IMPORTANT COMPONENTS
         data = data[['tweetText', 'sentiment', 'weight', 'timeCreated']]
-        sentiment_valcounts = data['sentiment'].value_counts()
+        sentiment_valcounts = data['sentiment'].value_counts(sort=False)
 
         # PLOT SENTIMENT BAR CHART (BOKEH)
         # create a new plot with a title and axis labels
@@ -249,9 +249,7 @@ def extendsub():
     cursor = conn.cursor()
 
     txt_tweet = request.args.get('text', type=str)
-    print txt_tweet
     txt_sentiment = request.args.get('sentiment', type=str)
-    print txt_sentiment
 
     query = "INSERT INTO public.extend_train (tweet_text, sentiment) VALUES (%s, %s);"
     data = (txt_tweet, txt_sentiment)
@@ -279,6 +277,7 @@ def classify_tweet():
     text = request.args.get('text', 'God is good', type=str)
     clf = request.args.get('clf', 'Maximum Enthropy', type=str)
     classifier = act.load_classifier(clf)
+    text = act.processTweet(text)
     text_sentiment = act.get_sentiment(text, classifier)
     return jsonify(sentiment=text_sentiment)
 
@@ -286,25 +285,57 @@ def classify_tweet():
 # ADMIN  ADMIN  ADMIN  ADMIN  ADMIN  ADMIN  ADMIN  ADMIN  ADMIN  ADMIN  ADMIN
 @app.route('/adminStart')
 def admin():
-    # Getting Extended Training set --- Created by user
-    try:
-        conn = psycopg2.connect(database='twitsense', user='postgres', password='C@ntH@ck', host='localhost')
-    except:
-        print "I am unable to connect to the database"
-
-    cur = conn.cursor()
-
-    cur.execute("""SELECT tweet_text, sentiment from extend_train""")
-
-    rows = cur.fetchall()
-
-    # json_data = json.dumps(rows)
-
     try:
         if session['admin']:
-            return render_template('admin.html', results=rows)
+            # Getting Extended Training set --- Created by user
+            try:
+                conn = psycopg2.connect(database='twitsense', user='postgres', password='C@ntH@ck', host='localhost')
+            except:
+                print "I am unable to connect to the database"
+
+            cur = conn.cursor()
+
+            cur.execute("""SELECT tweet_text, sentiment from extend_train""")
+
+            rows = cur.fetchall()
+
+            # Getting classifier Data
+            try:
+                conn = psycopg2.connect(database='twitsense', user='postgres', password='C@ntH@ck', host='localhost')
+            except:
+                print "I am unable to connect to the database"
+
+            cur = conn.cursor()
+
+            cur.execute("""SELECT clf_name, accuracy from classifier_table""")
+
+            rows_clf = cur.fetchall()
+
+            for row in rows_clf:
+                if row[0] == 'Maximum Enthropy':
+                    clf_max_nm = row[0]
+                    clf_max_acc = row[1]
+                elif row[0] == 'Naive Bayes':
+                    clf_nb_nm = row[0]
+                    clf_nb_acc = row[1]
+                elif row[0] == 'Support Vector Machine':
+                    clf_svm_nm = row[0]
+                    clf_svm_acc = row[1]
+
+            cur.execute("""Select count(*) from public.extend_train
+                            UNION
+                            Select count(*) from public.training_set;""")
+
+            counts = cur.fetchall()
+            res1 = 0
+            for count in counts:
+                res1 += count[0]  # Adds the result, 2 rows
+
+            return render_template("admin.html", results=rows, clf_max_acc=clf_max_acc, clf_max_nm=clf_max_nm,
+                                   clf_nb_acc=clf_nb_acc, clf_nb_nm=clf_nb_nm, clf_svm_acc=clf_svm_acc,
+                                   clf_svm_nm=clf_svm_nm, tot_tweets_train=res1)
     except KeyError:
-        return render_template('admin_login.html')
+        return render_template('admin_login.html', pgtitle='Admin')
 
 
 @app.route('/loginAdmin', methods=["POST"])
@@ -312,27 +343,58 @@ def loginAdmin():
     user = request.form['inputEmail']
     password = request.form['inputPassword']
 
-    # Getting Extended Training set --- Created by user
-    try:
-        conn = psycopg2.connect(database='twitsense', user='postgres', password='C@ntH@ck', host='localhost')
-    except:
-        print "I am unable to connect to the database"
-
-    cur = conn.cursor()
-
-    cur.execute("""SELECT tweet_text, sentiment from extend_train""")
-
-    rows = cur.fetchall()
-
-    # json_data = json.dump(rows)
-
     if user == 'jonathanitakpe@gmail.com' and password == 'C@ntH@ck':
         session['admin'] = user
-        for row in rows:
-            print row[0], row[1]
-        return render_template("admin.html", results=rows)
+
+        # Getting Extended Training set --- Created by user
+        try:
+            conn = psycopg2.connect(database='twitsense', user='postgres', password='C@ntH@ck', host='localhost')
+        except:
+            print "I am unable to connect to the database"
+
+        cur = conn.cursor()
+
+        cur.execute("""SELECT tweet_text, sentiment from extend_train""")
+
+        rows = cur.fetchall()
+
+        # Getting classifier Data
+        try:
+            conn = psycopg2.connect(database='twitsense', user='postgres', password='C@ntH@ck', host='localhost')
+        except:
+            print "I am unable to connect to the database"
+
+        cur = conn.cursor()
+
+        cur.execute("""SELECT clf_name, accuracy from classifier_table""")
+
+        rows_clf = cur.fetchall()
+
+        for row in rows_clf:
+            if row[0] == 'Maximum Enthropy':
+                clf_max_nm = row[0]
+                clf_max_acc = row[1]
+            elif row[0] == 'Naive Bayes':
+                clf_nb_nm = row[0]
+                clf_nb_acc = row[1]
+            elif row[0] == 'Support Vector Machine':
+                clf_svm_nm = row[0]
+                clf_svm_acc = row[1]
+
+        cur.execute("""Select count(*) from public.extend_train
+                   UNION
+                   Select count(*) from public.training_set;""")
+
+        counts = cur.fetchall()
+        res1 = 0
+        for count in counts:
+            res1 += count[0]  # Adds the result, 2 rows
+
+        return render_template("admin.html", results=rows, clf_max_acc=clf_max_acc, clf_max_nm=clf_max_nm,
+                               clf_nb_acc=clf_nb_acc, clf_nb_nm=clf_nb_nm, clf_svm_acc=clf_svm_acc,
+                               clf_svm_nm=clf_svm_nm, tot_tweets_train=res1)
     else:
-        return render_template("admin_login.html")
+        return render_template("admin_login.html", pgtitle='Admin')
 
 
 if __name__ == '__main__':

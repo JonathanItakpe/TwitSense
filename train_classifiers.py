@@ -36,7 +36,7 @@ def create_tfidf(f):
                 tweet.append(processTweet(row[5]))  # .decode('latin-1').encode('utf-8'))
     # End
 
-    # Getting Extended Training set --- Created by user
+    # Getting Extended Training set --- Created by users
     try:
         conn = psycopg2.connect(database='twitsense', user='postgres', password='C@ntH@ck', host='localhost')
     except:
@@ -147,8 +147,6 @@ def get_sentiment(tweets, classifier):
         tweet = processTweet(tweet)
         tweet = [tweet]
         sentiment.append(str(classifier.predict(tweet)[0]))
-    print tweets
-    print sentiment
     return sentiment
 
 
@@ -159,6 +157,7 @@ def evaluate_model(target_true, target_predicted):
     print 'Confusion Matrix:'
     print confusion
     print "The accuracy score is {:.2%}".format(accuracy_score(target_true, target_predicted))
+    return accuracy_score(target_true, target_predicted)
 
 
 def test_accuracy(classifier):
@@ -168,28 +167,38 @@ def test_accuracy(classifier):
     # Testing the Classifier
     clf = load_clf(classifier)
 
+    # Predict
     sentiment_predicted = get_sentiment(tweet_test, clf)
 
-    evaluate_model(sentiment_test, sentiment_predicted)
+    # Get Accuracy
+    clf_accuracy = "{:.2%}".format(accuracy_score(sentiment_test, sentiment_predicted))
+    print 'The accuracy is ' + clf_accuracy
+    # Update Table with new accuracy after training
+    conn = psycopg2.connect(database='twitsense', user='postgres', password='C@ntH@ck', host='localhost')
+    cursor = conn.cursor()
+
+    query = "UPDATE public.classifier_table SET accuracy = %s WHERE clf_name= %s;"
+    data = (clf_accuracy, classifier)
+
+    cursor.execute(query, data)
+    conn.commit()
+    conn.close()
 
 
-if __name__ == '__main__':
-    print 'Reading and pre processing data...'
-    # tweets, sentiments = create_tfidf('data/training.1600000.processed.noemoticon.csv')
+print 'Reading and pre processing data...'
+tweets, sentiments = create_tfidf('data/training.1600000.processed.noemoticon.csv')
 
-    # trainMaxEnt(tweets, sentiments)
+trainMaxEnt(tweets, sentiments)
 
-    # trainNB(tweets, sentiments)
+trainNB(tweets, sentiments)
 
-    # trainSVM(tweets, sentiments)
+trainSVM(tweets, sentiments)
 
-    print '\nNAIVE BAYES ACCURACY'
-    test_accuracy('Naive Bayes')
+print '\nNAIVE BAYES ACCURACY'
+test_accuracy('Naive Bayes')
 
-    print '\nMAXIMUM ENTHROPY'
-    test_accuracy('Maximum Enthropy')
+print '\nMAXIMUM ENTHROPY'
+test_accuracy('Maximum Enthropy')
 
-    print '\nSUPPORT VECTOR MACHINE'
-    test_accuracy('Support Vector Machine')
-
-
+print '\nSUPPORT VECTOR MACHINE'
+test_accuracy('Support Vector Machine')

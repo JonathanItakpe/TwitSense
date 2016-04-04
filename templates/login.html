@@ -1,14 +1,12 @@
 {% extends "base.html" %}
 {% block body %}
-    <div class="container" style="width: 60%">
-        <div class="jumbotron">
-            <div class="container text-center">
+        <div class="jumbotron" style="height: 100%; width: 100%">
+            <div class="container text-center" >
                 <h2>Welcome to Twit-Sense</h2>
-                <blockquote class="pull-left"><p>Due to new twitter policies, every user accessing the Twitter API is required to
+                <blockquote>Due to new twitter policies, every user accessing the Twitter API is required to
                 Login to twitter and grant this application access to their account in order to pull tweets.
-                Thank You, Kindly login below</p></blockquote>
+                Thank You, Kindly login below</blockquote>
                 <a href="/loginTwitter"><img src="../static/sign-in.png" alt="Sign In"></a>
             </div>
         </div>
-    </div>
 {% endblock %}
